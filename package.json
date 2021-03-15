@@ -1,6 +1,6 @@
 {
   "name": "xumm-xapp-escrow-create",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "scripts": {
     "ng": "ng",
     "start": "ng serve --port 4201 --open",
@@ -26,6 +26,7 @@
     "@angular/router": "~11.2.5",
     "buffer": "^6.0.3",
     "five-bells-condition": "^5.0.1",
+    "ngx-device-detector": "^2.0.6",
     "rxjs": "~6.6.0",
     "tslib": "^2.0.0",
     "xrpl-tagged-address-codec": "^0.2.1",

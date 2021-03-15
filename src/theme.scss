@@ -48,6 +48,10 @@
     background-color: white !important;
   }
 
+  .snackbar-failed {
+    background-color: white !important;
+  }
+
   @include angular-material-theme($light-theme);
 }
 
@@ -110,7 +114,11 @@
     background-color:rgba(50, 50, 50, 0.5) !important;
   }
 
-  .snackbar-success {
+  .body .snackbar-success {
+    background-color: #303030 !important;
+  }
+
+  .body .snackbar-failed {
     background-color: #303030 !important;
   }
 

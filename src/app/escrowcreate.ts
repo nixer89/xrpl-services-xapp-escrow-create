@@ -1,28 +1,28 @@
-import { Component, ViewChild, OnInit } from '@angular/core';
+import { Component, ViewChild, OnInit, Input, OnDestroy } from '@angular/core';
 import { GoogleAnalyticsService } from './services/google-analytics.service';
 import * as normalizer from './utils/normalizers'
 import { isValidXRPAddress } from './utils/utils';
 import { MatStepper } from '@angular/material/stepper';
-import { ActivatedRoute } from '@angular/router';
-import { OverlayContainer } from '@angular/cdk/overlay';
 import { XummService } from './services/xumm.service';
 import { XRPLWebsocket } from './services/xrplWebSocket';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { GenericBackendPostRequest, TransactionValidation } from './utils/types';
 import { XummTypes } from 'xumm-sdk';
 import { webSocket, WebSocketSubject} from 'rxjs/webSocket';
+import { Subscription, Observable } from 'rxjs';
+import { DeviceDetectorService } from 'ngx-device-detector';
 
 @Component({
   selector: 'escrowcreate',
   templateUrl: './escrowcreate.html',
   styleUrls: ['./escrowcreate.css']
 })
-export class EscrowCreateComponent implements OnInit {
+export class EscrowCreateComponent implements OnInit, OnDestroy {
 
-  constructor(private route: ActivatedRoute,
-              private xummService: XummService,
+  constructor(private xummService: XummService,
               private xrplWebSocket: XRPLWebsocket,
               private snackBar: MatSnackBar,
+              private device:DeviceDetectorService,
               private googleAnalytics: GoogleAnalyticsService) {}
 
 
@@ -49,9 +49,15 @@ export class EscrowCreateComponent implements OnInit {
 
   @ViewChild('escrowStepper') stepper: MatStepper;
 
+  @Input()
+  ottChanged: Observable<any>;
+
   websocket: WebSocketSubject<any>;
 
   originalAccountInfo:any;
+  testMode:boolean = false;
+
+  private ottReceived: Subscription;
 
   isValidEscrow:boolean = false;
   validAmount:boolean = false;
@@ -76,24 +82,34 @@ export class EscrowCreateComponent implements OnInit {
 
   hidePw = true;
 
+  createdEscrow:any = {}
+  escrowReleaseData: any = {};
+
+  infoLabel:string = null;
+  autoReleaseActivated:boolean = false;
+
   ngOnInit() {
-    this.route.queryParams.subscribe(async params => {
-      let xAppToken = params.xAppToken;
-      let testMode =  (params.node && params.node == 'TESTNET') || true;
+    this.ottReceived = this.ottChanged.subscribe(async ottData => {
 
-      console.log("received pararms: " + JSON.stringify(params));
-
-      if(xAppToken) {
-        let ottResponse:any = await this.xummService.getxAppOTTData(xAppToken);
-
-        console.log("ottResponse: " + JSON.stringify(ottResponse));
-        if(ottResponse && ottResponse.account && ottResponse.accountaccess == 'FULL') {
-          await this.loadAccountData(ottResponse.account, testMode); //false = ottResponse.node == 'TESTNET' 
+      if(ottData) {
+        console.log("ottResponse: " + JSON.stringify(ottData));
+        if(ottData && ottData.account && ottData.accountaccess == 'FULL') {
+          this.testMode = ottData.nodetype == 'TESTNET';
+          this.infoLabel = "changed mode to testnet: " + this.testMode;
+          //await this.loadAccountData(ottData.account); //false = ottResponse.node == 'TESTNET' 
         }
       }
     });
 
-    this.dateTimePickerSupported = false;//!(this.device && this.device.getDeviceInfo() && this.device.getDeviceInfo().os_version && (this.device.getDeviceInfo().os_version.toLowerCase().includes('ios') || this.device.getDeviceInfo().browser.toLowerCase().includes('safari') || this.device.getDeviceInfo().browser.toLowerCase().includes('edge')));
+    //this.infoLabel = JSON.stringify(this.device.getDeviceInfo());
+
+    //this.dateTimePickerSupported = !(this.device && this.device.getDeviceInfo() && this.device.getDeviceInfo().os_version && (this.device.getDeviceInfo().os_version.toLowerCase().includes('ios') || this.device.getDeviceInfo().browser.toLowerCase().includes('safari') || this.device.getDeviceInfo().browser.toLowerCase().includes('edge')));
+    this.dateTimePickerSupported = false;
+  }
+
+  ngOnDestroy() {
+    if(this.ottReceived)
+      this.ottReceived.unsubscribe();
   }
 
   checkChanges() {
@@ -192,12 +208,14 @@ export class EscrowCreateComponent implements OnInit {
   }
 
   sendPayloadToXumm() {
-
-    this.googleAnalytics.analyticsEventEmitter('escrow_create', 'sendToXumm', 'escrow_create_component');
+    this.loadingData = true;
+    //this.infoLabel = "sending payload";
+    try {
+    //this.googleAnalytics.analyticsEventEmitter('escrow_create', 'sendToXumm', 'escrow_create_component');
     let xummPayload:XummTypes.XummPostPayloadBodyJson = {
       options: {
         expire: 5,
-        submit: true
+        forceAccount: true
       },
       txjson: {
         TransactionType: "EscrowCreate"
@@ -215,6 +233,7 @@ export class EscrowCreateComponent implements OnInit {
       xummPayload.custom_meta.instruction += "- Escrow Destination: " + this.destinationInput.trim();
     }
 
+    
     if(this.amountInput && parseFloat(this.amountInput) >= 0.000001) {
       xummPayload.txjson.Amount = parseFloat(this.amountInput)*1000000+"";
       xummPayload.custom_meta.instruction += "\n- Escrow Amount: " + this.amountInput;
@@ -263,8 +282,8 @@ export class EscrowCreateComponent implements OnInit {
 
         let backendRequest: GenericBackendPostRequest = {
           options: {
-            signinToValidate: false,
-            web: false
+            web: false,
+            xrplAccount: this.originalAccountInfo.Account
           },
           payload: xummPayload
         }
@@ -274,31 +293,48 @@ export class EscrowCreateComponent implements OnInit {
     } else {
       let backendRequest: GenericBackendPostRequest = {
         options: {
-          signinToValidate: false,
-          web: false
+          web: false,
+          xrplAccount: this.originalAccountInfo.Account
         },
         payload: xummPayload
       }
 
       this.waitForTransactionSigning(backendRequest);
     }
+  } catch(err) {
+    //this.infoLabel = JSON.stringify(err);
+  }
   }
 
   async waitForTransactionSigning(payloadRequest: GenericBackendPostRequest) {
+    //this.infoLabel = "Opening sign request";
     let xummResponse:XummTypes.XummPostPayloadResponse;
     try {
         //console.log("sending xumm payload: " + JSON.stringify(xummPayload));
         xummResponse = await this.xummService.submitPayload(payloadRequest);
-        //console.log(JSON.stringify(xummResponse));
+        //this.infoLabel = "Called xumm successfully"
+        console.log(JSON.stringify(xummResponse));
         if(!xummResponse || !xummResponse.uuid) {
+          this.loadingData = false;
           this.snackBar.open("Error contacting XUMM backend", null, {panelClass: 'snackbar-failed', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
+          return;
         }        
     } catch (err) {
         //console.log(JSON.stringify(err));
+        this.loadingData = false;
         this.snackBar.open("Could not contact XUMM backend", null, {panelClass: 'snackbar-failed', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
+        return;
     }
 
     let trxType = payloadRequest.options.signinToValidate ? "Sign In" : "Escrow creation"
+
+    if (typeof window.ReactNativeWebView !== 'undefined') {
+      window.ReactNativeWebView.postMessage(JSON.stringify({
+        command: 'openSignRequest',
+        uuid: xummResponse.uuid
+      }));
+    }
+
     this.websocket = webSocket(xummResponse.refs.websocket_status);
     this.websocket.asObservable().subscribe(async message => {
         //console.log("message received: " + JSON.stringify(message));
@@ -306,12 +342,16 @@ export class EscrowCreateComponent implements OnInit {
             
             if(message.signed) {
                 let transactionResult:TransactionValidation = null;
+                //check if we are an EscrowReleaser payment
+                if(payloadRequest.payload.txjson.TransactionType.toLowerCase() == 'payment' && payloadRequest.payload.custom_meta && payloadRequest.payload.custom_meta.blob && !payloadRequest.options.signinToValidate)
+                  transactionResult = await this.xummService.validateEscrowPayment(message.payload_uuidv4);
                 if(payloadRequest.options.signinToValidate)
                   transactionResult = await this.xummService.checkSignIn(message.payload_uuidv4);
                 else
                   transactionResult = await this.xummService.validateTransaction(message.payload_uuidv4);
 
-                console.log("sign result: " + JSON.stringify(transactionResult));
+                console.log("trx result: " + JSON.stringify(transactionResult));
+//                this.infoLabel = JSON.stringify(transactionResult);
 
                 if(this.websocket) {
                     this.websocket.unsubscribe();
@@ -319,10 +359,32 @@ export class EscrowCreateComponent implements OnInit {
                 }
 
                 if(transactionResult && transactionResult.success) {
-                  if(payloadRequest.options.signinToValidate)
-                    this.destinationInput = transactionResult.account;
-                  else
-                    this.snackBar.open("Escrow created!", null, {panelClass: 'snackbar-success', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});  
+                  if(payloadRequest.options.signinToValidate) {
+                    if(payloadRequest.payload.custom_meta && payloadRequest.payload.custom_meta.blob && payloadRequest.payload.custom_meta.blob.source == "EscrowOwner") {
+                      this.testMode = true;
+                      await this.loadAccountData(transactionResult.account);
+                    } else {
+                      this.destinationInput = transactionResult.account;
+                      this.checkChanges();
+                    }
+                  }
+                  else {
+                    if(payloadRequest.payload.txjson.TransactionType.toLowerCase() === 'payment' && payloadRequest.payload.custom_meta && payloadRequest.payload.custom_meta.blob) {
+                      this.snackBar.open("Auto Release activated!", null, {panelClass: 'snackbar-success', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
+                      this.autoReleaseActivated = true;
+                      setTimeout(() => {
+                        if (typeof window.ReactNativeWebView !== 'undefined') {
+                          window.ReactNativeWebView.postMessage(JSON.stringify({
+                            command: 'close'
+                          }));
+                        }
+                      }, 5500);
+                    } else {
+                      this.snackBar.open("Escrow created!", null, {panelClass: 'snackbar-success', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
+                      await this.loadCreatedEscrowData(transactionResult.txid);
+                      this.moveNext();
+                    }
+                  }
                 } else {
                   this.snackBar.open(trxType+" not successfull!", null, {panelClass: 'snackbar-failed', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
                 }
@@ -330,17 +392,13 @@ export class EscrowCreateComponent implements OnInit {
               this.snackBar.open(trxType+" not successfull!", null, {panelClass: 'snackbar-failed', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
             }
 
+            this.loadingData = false;
+
         } else if(message.expired || message.expires_in_seconds <= 0) {
+          this.loadingData = false;
           this.snackBar.open(trxType+" not successfull!", null, {panelClass: 'snackbar-failed', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
         }
     });
-    
-    if (typeof window.ReactNativeWebView !== 'undefined') {
-      window.ReactNativeWebView.postMessage(JSON.stringify({
-        command: 'openSignRequest',
-        uuid: xummResponse.uuid
-      }));
-    }
   }
 
   getAvailableBalanceForEscrow(): number {
@@ -361,27 +419,8 @@ export class EscrowCreateComponent implements OnInit {
     }
   }
 
-  escrowBiggerThanAvailable(): boolean {
-    return this.originalAccountInfo && this.amountInput && parseFloat(this.amountInput) > this.getAvailableBalanceForEscrow();
-  }
-
-  scanForOwner() {
-    if (typeof window.ReactNativeWebView !== 'undefined') {
-      window.ReactNativeWebView.postMessage(JSON.stringify({
-        command: 'scanQr'
-      }));
-
-      window.addEventListener("message", event => {
-        console.log(event.data);
-        if(event.data.reason == "SCANNED" && isValidXRPAddress(event.data.qrContents)) {
-          this.destinationInput = event.data.qrContents;
-          this.snackBar.open("Destination address inserted", null, {panelClass: 'snackbar-success', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
-        }
-      })
-    }
-  }
-
-  async signInForOwner() {
+  async signInWithEscrowOwner() {
+    this.loadingData = true;
     //setting up xumm payload and waiting for websocket
     let backendPayload:GenericBackendPostRequest = {
       options: {
@@ -396,6 +435,56 @@ export class EscrowCreateComponent implements OnInit {
               TransactionType: "SignIn"
           },
           custom_meta: {
+            blob: { source: "EscrowOwner"}
+          }
+      }
+    }
+
+    this.waitForTransactionSigning(backendPayload);
+  }
+
+  escrowBiggerThanAvailable(): boolean {
+    return this.originalAccountInfo && this.amountInput && parseFloat(this.amountInput) > this.getAvailableBalanceForEscrow();
+  }
+
+  scanForDestination() {
+    if (typeof window.ReactNativeWebView !== 'undefined') {
+      this.loadingData = true;
+      window.ReactNativeWebView.postMessage(JSON.stringify({
+        command: 'scanQr'
+      }));
+
+      window.addEventListener("message", event => {
+        console.log(event.data);
+        let qrResult = JSON.parse(event.data);
+        //this.infoLabel = "QR-result: " + JSON.stringify(qrResult);
+        if(qrResult.method == "scanQr" && qrResult.reason == "SCANNED" && isValidXRPAddress(qrResult.qrContents)) {
+          this.destinationInput = qrResult.qrContents;
+          this.checkChanges();
+          this.snackBar.open("Destination address inserted", null, {panelClass: 'snackbar-success', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
+        }
+        this.loadingData = false;
+      });
+    }
+  }
+
+  async signInForDestination() {
+    this.loadingData = true;
+    //setting up xumm payload and waiting for websocket
+    let backendPayload:GenericBackendPostRequest = {
+      options: {
+          web: false,
+          signinToValidate: true
+      },
+      payload: {
+          options: {
+              expire: 5
+          },
+          txjson: {
+              TransactionType: "SignIn"
+          },
+          custom_meta: {
+            blob: { source: "EscrowDestination"}
           }
       }
     }
@@ -415,9 +504,10 @@ export class EscrowCreateComponent implements OnInit {
     this.passwordInput = null;
   }
 
-  async loadAccountData(xrplAccount: string, testMode: boolean) {
+  async loadAccountData(xrplAccount: string) {
+    //this.infoLabel = "loading " + xrplAccount;
     if(xrplAccount) {
-      this.googleAnalytics.analyticsEventEmitter('loading_account_data', 'account_data', 'xrpl_transactions_component');
+      //this.googleAnalytics.analyticsEventEmitter('loading_account_data', 'account_data', 'xrpl_transactions_component');
       this.loadingData = true;
 
       let account_info_request:any = {
@@ -426,9 +516,9 @@ export class EscrowCreateComponent implements OnInit {
         "strict": true,
       }
 
-      let message_acc_info:any = await this.xrplWebSocket.getWebsocketMessage("xrpl-transactions", account_info_request, testMode);
+      let message_acc_info:any = await this.xrplWebSocket.getWebsocketMessage("xrpl-transactions", account_info_request, this.testMode);
       //console.log("xrpl-transactions account info: " + JSON.stringify(message_acc_info));
-
+      //this.infoLabel = JSON.stringify(message_acc_info);
       if(message_acc_info && message_acc_info.status && message_acc_info.type && message_acc_info.type === 'response') {
         if(message_acc_info.status === 'success' && message_acc_info.result && message_acc_info.result.account_data) {
           this.originalAccountInfo = message_acc_info.result.account_data;
@@ -438,6 +528,66 @@ export class EscrowCreateComponent implements OnInit {
       } else {
         this.originalAccountInfo = null;
       }
+
+      this.loadingData = false;
+    }
+  }
+
+  async loadCreatedEscrowData(txId: string): Promise<void> {
+    this.loadingData = true;
+    let txInfo:any = {
+        command: "tx",
+        transaction: txId,
+    }
+
+    let message:any = await this.xrplWebSocket.getWebsocketMessage("escrowListExecuter", txInfo, this.testMode);
+
+    //this.infoLabel = JSON.stringify(message);
+
+    if(message && message.status && message.status === 'success' && message.type && message.type === 'response') {
+        if(message.result && message.result.TransactionType === 'EscrowCreate') {
+            //console.log("Sequence: " + message.result.Sequence);
+            this.createdEscrow = message.result;
+            //this.infoLabel = JSON.stringify(this.createdEscrow);
+            this.loadingData = false;
+        }
+    }
+  }
+
+  addEscrowToAutoReleaser() {
+    this.loadingData = true;
+    let genericBackendRequest:GenericBackendPostRequest = {
+        options: {
+            xrplAccount: this.createdEscrow.Account
+        },
+        payload: {
+          options: {
+            forceAccount: true
+          },
+          txjson: {
+              TransactionType: "Payment",
+              Memos : [{Memo: {MemoType: Buffer.from("[https://xumm.community]-Memo", 'utf8').toString('hex').toUpperCase(), MemoData: Buffer.from("Payment for Auto Release of Escrow! Owner:" + this.createdEscrow.Account + " Sequence: " + this.createdEscrow.Sequence, 'utf8').toString('hex').toUpperCase()}}]
+          },
+          custom_meta: {
+              instruction: "SIGN WITH ESCROW OWNER ACCOUNT!!!\n\nEnable Auto Release for Escrow!\n\nEscrow-Owner: " + this.createdEscrow.Account + "\nSequence: " + this.createdEscrow.Sequence + "\nFinishAfter: " + new Date(normalizer.rippleEpocheTimeToUTC(this.createdEscrow.FinishAfter)).toLocaleString(),
+              blob: {account: this.createdEscrow.Account, sequence: this.createdEscrow.Sequence, finishafter: normalizer.rippleEpocheTimeToUTC(this.createdEscrow.FinishAfter), testnet: this.testMode}
+          },
+        }
+    }
+
+    this.waitForTransactionSigning(genericBackendRequest);
+    
+  }
+
+  isAbleToAutoRelease(): boolean {
+    return this.createdEscrow && this.createdEscrow.FinishAfter && !this.createdEscrow.Condition && (!this.createdEscrow.CancelAfter || (this.createdEscrow.CancelAfter - this.createdEscrow.FinishAfter) > 90*60)
+  }
+
+  close() {
+    if (typeof window.ReactNativeWebView !== 'undefined') {
+      window.ReactNativeWebView.postMessage(JSON.stringify({
+        command: 'close'
+      }));
     }
   }
 

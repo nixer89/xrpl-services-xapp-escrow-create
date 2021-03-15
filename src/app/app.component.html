@@ -1,4 +1,5 @@
-<div class="{{darkMode ? 'dark-theme' : 'light-theme'}}">
-  <escrowcreate class="{{darkMode ? 'dark-theme' : 'light-theme'}}"></escrowcreate>
+<div *ngIf="ottLoaded | async" class="{{darkMode ? 'dark-theme' : 'light-theme'}}">
+  <!--label *ngIf="infoLabel">AppComponent: {{infoLabel}}</label-->
+  <escrowcreate [ottChanged]="ottReceived.asObservable()"></escrowcreate>
   <app-footer></app-footer>
 </div>

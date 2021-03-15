@@ -7,7 +7,7 @@ import { GenericBackendPostRequest, TransactionValidation } from '../utils/types
 export class XummService {
     constructor(private app: AppService) {}
 
-    isTestMode = true;
+    isTestMode = false;
     xummBackendURL = this.isTestMode ? 'http://localhost:4001' : 'https://api.xumm.community';
 
     async submitPayload(payload:GenericBackendPostRequest): Promise<XummTypes.XummPostPayloadResponse> {
@@ -78,6 +78,15 @@ export class XummService {
     async validateTransaction(payloadId:string): Promise<TransactionValidation> {
         try {
             return this.app.get(this.xummBackendURL+"/api/v1/xrpl/validatetx/"+payloadId);
+        } catch(err) {
+            console.log(JSON.stringify(err))
+            return { error: true, success: false, testnet:false }
+        }
+    }
+
+    async validateEscrowPayment(payloadId:string): Promise<TransactionValidation> {
+        try {
+            return this.app.get(this.xummBackendURL+"/api/v1/escrow/validatepayment/" + payloadId);
         } catch(err) {
             console.log(JSON.stringify(err))
             return { error: true, success: false, testnet:false }
