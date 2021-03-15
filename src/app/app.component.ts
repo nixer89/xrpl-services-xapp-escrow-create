@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs';
 import { XummService } from './services/xumm.service';
+import { OverlayContainer } from '@angular/cdk/overlay';
 
 @Component({
   selector: 'app-root',
@@ -17,7 +18,9 @@ export class AppComponent implements OnInit {
 
   ottReceived: Subject<any> = new Subject<any>();
 
-  constructor(private route: ActivatedRoute, private xummService: XummService) {
+  constructor(private route: ActivatedRoute, private xummService: XummService, private overlayContainer: OverlayContainer) { }
+
+  ngOnInit() {
     this.route.queryParams.subscribe(async params => {
       let xAppToken = params.xAppToken;
       let xAppStyle = params.xAppStyle;
@@ -31,39 +34,22 @@ export class AppComponent implements OnInit {
       if(!this.darkMode) {
         console.log("setting light style");
         bodyStyles.setProperty('--background-color', 'rgba(238,238,238,.5)');
+        this.overlayContainer.getContainerElement().classList.remove('dark-theme');
+        this.overlayContainer.getContainerElement().classList.add('light-theme');
       } else {
         console.log("setting dark style");
         bodyStyles.setProperty('--background-color', 'rgba(50, 50, 50)');
+        this.overlayContainer.getContainerElement().classList.remove('light-theme');
+        this.overlayContainer.getContainerElement().classList.add('dark-theme');
       }
 
       if(xAppToken) {
         let ottResponse:any = await this.xummService.getxAppOTTData(xAppToken);
 
-        // getxAppOTT response: {"version":"1.0.9","locale":"en","style":"LIGHT","nodetype":"TESTNET","origin":{"type":"QR"}}
+        this.ottLoaded = Promise.resolve(true);
 
-        let newMode = ottResponse && ottResponse.style && ottResponse.style != 'LIGHT';
-
-        if(this.darkMode != newMode) {
-          this.darkMode = newMode;
-
-          var bodyStyles = document.body.style;
-          if(!this.darkMode) {
-            console.log("setting light style");
-            bodyStyles.setProperty('--background-color', 'rgba(238,238,238,.5)');
-          } else {
-            console.log("setting dark style");
-            bodyStyles.setProperty('--background-color', 'rgba(50, 50, 50)');
-          }
-        }
-
-        this.ottReceived.next(ottResponse);
+        setTimeout(() => {this.ottReceived.next(ottResponse);} , 200);     
       }
-
-      this.ottLoaded = Promise.resolve(true);
     });
-  }
-
-  ngOnInit() {
-    
   }
 }

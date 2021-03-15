@@ -11,6 +11,7 @@ import { XummTypes } from 'xumm-sdk';
 import { webSocket, WebSocketSubject} from 'rxjs/webSocket';
 import { Subscription, Observable } from 'rxjs';
 import { DeviceDetectorService } from 'ngx-device-detector';
+import { OverlayContainer } from '@angular/cdk/overlay';
 
 @Component({
   selector: 'escrowcreate',
@@ -22,8 +23,9 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
   constructor(private xummService: XummService,
               private xrplWebSocket: XRPLWebsocket,
               private snackBar: MatSnackBar,
+              private overlayContainer: OverlayContainer,
               private device:DeviceDetectorService,
-              private googleAnalytics: GoogleAnalyticsService) {}
+              private googleAnalytics: GoogleAnalyticsService) { }
 
 
   @ViewChild('inpamount') inpamount;
@@ -90,17 +92,33 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.ottReceived = this.ottChanged.subscribe(async ottData => {
+      this.infoLabel = JSON.stringify(ottData);
 
       if(ottData) {
         console.log("ottResponse: " + JSON.stringify(ottData));
         if(ottData && ottData.account && ottData.accountaccess == 'FULL') {
+          
           this.testMode = ottData.nodetype == 'TESTNET';
           this.infoLabel = "changed mode to testnet: " + this.testMode;
+
+          await this.loadAccountData(ottData.account);
+
+          var bodyStyles = document.body.style;
+          if(ottData && ottData.style && ottData.style == 'LIGHT') {
+            console.log("setting light style");
+            bodyStyles.setProperty('--background-color', 'rgba(238,238,238,.5)');
+            this.overlayContainer.getContainerElement().classList.remove('dark-theme');
+            this.overlayContainer.getContainerElement().classList.add('light-theme');
+          } else {
+            console.log("setting dark style");
+            bodyStyles.setProperty('--background-color', 'rgba(50, 50, 50)');
+            this.overlayContainer.getContainerElement().classList.remove('light-theme');
+            this.overlayContainer.getContainerElement().classList.add('dark-theme');
+          }
           //await this.loadAccountData(ottData.account); //false = ottResponse.node == 'TESTNET' 
         }
       }
     });
-
     //this.infoLabel = JSON.stringify(this.device.getDeviceInfo());
 
     //this.dateTimePickerSupported = !(this.device && this.device.getDeviceInfo() && this.device.getDeviceInfo().os_version && (this.device.getDeviceInfo().os_version.toLowerCase().includes('ios') || this.device.getDeviceInfo().browser.toLowerCase().includes('safari') || this.device.getDeviceInfo().browser.toLowerCase().includes('edge')));
@@ -138,7 +156,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
     }
     
     this.finishDateInFuture = this.finishAfterDateTime != null && this.finishAfterDateTime.getTime() < Date.now();
-    this.validFinishAfter = this.finishAfterDateTime != null && this.finishAfterDateTime.getTime() > 0;
+    this.validFinishAfter = this.finishAfterDateTime != null && this.finishAfterDateTime.getTime() > 0 && !this.finishDateInFuture;
     
     if(this.finishAfterDateTime)
       this.escrowYears = this.finishAfterDateTime.getFullYear() - (new Date()).getFullYear();
@@ -372,13 +390,6 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
                     if(payloadRequest.payload.txjson.TransactionType.toLowerCase() === 'payment' && payloadRequest.payload.custom_meta && payloadRequest.payload.custom_meta.blob) {
                       this.snackBar.open("Auto Release activated!", null, {panelClass: 'snackbar-success', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
                       this.autoReleaseActivated = true;
-                      setTimeout(() => {
-                        if (typeof window.ReactNativeWebView !== 'undefined') {
-                          window.ReactNativeWebView.postMessage(JSON.stringify({
-                            command: 'close'
-                          }));
-                        }
-                      }, 5500);
                     } else {
                       this.snackBar.open("Escrow created!", null, {panelClass: 'snackbar-success', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
                       await this.loadCreatedEscrowData(transactionResult.txid);
@@ -518,7 +529,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
 
       let message_acc_info:any = await this.xrplWebSocket.getWebsocketMessage("xrpl-transactions", account_info_request, this.testMode);
       //console.log("xrpl-transactions account info: " + JSON.stringify(message_acc_info));
-      //this.infoLabel = JSON.stringify(message_acc_info);
+      this.infoLabel = JSON.stringify(message_acc_info);
       if(message_acc_info && message_acc_info.status && message_acc_info.type && message_acc_info.type === 'response') {
         if(message_acc_info.status === 'success' && message_acc_info.result && message_acc_info.result.account_data) {
           this.originalAccountInfo = message_acc_info.result.account_data;

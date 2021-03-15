@@ -1,13 +1,13 @@
-<label *ngIf="infoLabel">{{infoLabel}}</label>
+<!--label *ngIf="infoLabel">{{infoLabel}}</label-->
 <!-- label *ngIf="originalAccountInfo">{{originalAccountInfo}}</label-->
 <mat-vertical-stepper linear #escrowStepper>
 
   <mat-step completed="false" editable="false">
     <mat-card fxLayout="column" fxLayoutGap="0.5em">
         <ng-template matStepLabel>Description</ng-template>
-        <a href="https://xrpl.org/escrowcreate.html" target="_blank" rel="noreferrer">Escrow Create Documentation</a><br/>
+        <a href="https://xrpl.org/escrowcreate.html" rel="noreferrer">Escrow Create Documentation</a><br/>
         <label>Sequester XRP until the escrow process either finishes or is canceled.</label>
-        <label>Every Escrow will add 5 XRP to your account reserve. When the Escorw is finished/cancelled, the 5 XRP are removed from the account reserve and back available.</label>
+        <label>Every Escrow will add 5 XRP to your account reserve. The 5 XRP are back available when the Escorw is finished/canceled.</label>
         <label style="color: crimson;padding-top: 1em;"><b>Be careful. You could lock away your funds for years!</b><br/></label>
         <div style="padding-top: 0.5em;">
             <button mat-raised-button color="primary" (click)="moveNext()">Next</button>
@@ -17,14 +17,21 @@
 
   <mat-step completed="false" editable="false">
     <mat-card fxLayout="column" fxLayoutGap="0.5em">
-        <ng-template matStepLabel>Sign In</ng-template>
-        <label class="loading">Please sign in with the account you want to create the Escrow with.</label>
-        <div fxLayoutAlign="start center">
+        <ng-template matStepLabel>Escrow Owner</ng-template>
+        <label class="loading">What is the account you want to create the Escrow with?</label>
+        <label *ngIf="originalAccountInfo && originalAccountInfo.Account">Currently selected:</label>
+        <label *ngIf="originalAccountInfo && originalAccountInfo.Account">{{originalAccountInfo.Account}}</label>
+
+        <div fxLayoutAlign="start center" style="padding-top: 0.5em;">
           <button mat-raised-button color="primary" (click)="signInWithEscrowOwner()" [disabled]="loadingData">{{originalAccountInfo && originalAccountInfo.Account ? 'Change Account' : 'Sign In' }}</button>
         </div>
-        
-        <label *ngIf="originalAccountInfo && originalAccountInfo.Account">Signed In with: {{originalAccountInfo.Account}}</label>
-        <label class="warning" *ngIf="originalAccountInfo && !originalAccountInfo.Account">Account not found.</label>
+
+        <label class="warning" *ngIf="originalAccountInfo && !originalAccountInfo.Account">Account not activated on {{testMode ? 'Testnet' : 'Mainnet'}}.</label>
+
+        <div *ngIf="loadingData" fxLayoutAlign="center center">
+          <label>Loading...</label>
+          <mat-progress-spinner color="primary" mode="indeterminate" diameter=25></mat-progress-spinner>
+        </div>
 
         <div style="padding-top: 0.5em;" fxLayoutGap="0.5em">
             <button mat-raised-button color="primary" (click)="moveNext()" [disabled]="!originalAccountInfo || !originalAccountInfo.Account || loadingData">Next</button>
@@ -44,10 +51,15 @@
           </mat-form-field>
         </form>
 
-        <div fxLayout="column" fxLayoutGap="0.5em" fxLayoutAlign="center center">
+        <div fxLayout="row" fxLayoutGap="0.5em" fxLayoutAlign="start center">
           <label>Alternatively:</label>
-          <button mat-raised-button color="primary" (click)="scanForDestination()" [disabled]="loadingData">Scan Destination Acc QR</button>
-          <button mat-raised-button color="primary" (click)="signInForDestination()" [disabled]="loadingData">Sign In with Destination Acc</button>
+          <button mat-raised-button color="primary" (click)="scanForDestination()" [disabled]="loadingData"><mat-icon>qr_code_scanner</mat-icon></button>
+          <button mat-raised-button color="primary" (click)="signInForDestination()" [disabled]="loadingData"><mat-icon>login</mat-icon></button>
+        </div>
+
+        <div *ngIf="loadingData" fxLayoutAlign="center center">
+          <label>Loading...</label>
+          <mat-progress-spinner color="primary" mode="indeterminate" diameter=25></mat-progress-spinner>
         </div>
 
         <div style="padding-top: 0.5em;" fxLayoutGap="0.5em">
@@ -71,6 +83,11 @@
           </mat-form-field>
           <label *ngIf="originalAccountInfo && originalAccountInfo.Balance">Maximum: {{getAvailableBalanceForEscrow()}} XRP</label>
         </form>
+
+        <div *ngIf="loadingData" fxLayoutAlign="center center">
+          <label>Loading...</label>
+          <mat-progress-spinner color="primary" mode="indeterminate" diameter=25></mat-progress-spinner>
+        </div>
 
         <div style="padding-top: 0.5em;" fxLayoutGap="0.5em">
             <button mat-raised-button color="primary" (click)="moveNext()" [disabled]="!validAmount || loadingData">Next</button>
@@ -133,7 +150,12 @@
         </mat-expansion-panel>
 
         <label *ngIf="validAddress && validAmount && (!validFinishAfter && !validCondition)">Please provide a Finish After time.</label>
-        <label *ngIf="validAddress &&validAmount &&  validCondition && (!validFinishAfter && !validCancelAfter)">Please provide a Finish After or Cancel After time.</label>
+        <label *ngIf="validAddress && validAmount &&  validCondition && (!validFinishAfter && !validCancelAfter)">Please provide a Finish After or Cancel After time.</label>
+
+        <div *ngIf="loadingData" fxLayoutAlign="center center">
+          <label>Preparing your Escrow...</label>
+          <mat-progress-spinner color="primary" mode="indeterminate" diameter=25></mat-progress-spinner>
+        </div>
 
         <div style="padding-top: 1em;" fxLayoutGap="0.5em">
             <button mat-raised-button color="primary" (click)="sendPayloadToXumm()" [disabled]="!isValidEscrow || loadingData">Create Escrow</button>
@@ -145,14 +167,14 @@
   <mat-step completed="false" editable="false">
     <mat-card fxLayout="column" fxLayoutGap="0.5em">
         <ng-template matStepLabel>Escrow Auto Releaser</ng-template>
-        <div *ngIf="!isAbleToAutoRelease()" fxLayout="column" fxLayoutGap="0.5em">
+        <div *ngIf="!isAbleToAutoRelease() && !autoReleaseActivated" fxLayout="column" fxLayoutGap="0.5em">
           <label class="loading">You Escrow can not be added to the Escrow Releaser service since it does not fulfill the requirements.</label>
           <label>Requirements are:</label>
           <label> - FinishAfter time set</label>
           <label> - no Condition (Password)</label>
           <label> - no CancelAfter or CancelAfter > 90min past FinishAfter</label>
         </div>
-        <div *ngIf="isAbleToAutoRelease()" fxLayout="column" fxLayoutGap="0.5em">
+        <div *ngIf="isAbleToAutoRelease() && !autoReleaseActivated" fxLayout="column" fxLayoutGap="0.5em">
           <label class="loading">Do you want to add your Escrow to the "Escrow Releaser" of xumm.community?</label>
           <label>Adding your escrow to this service comes with a fee of 1 XRP.</label>
           <label>Once the Escrow is finished, the service will take care that the funds are moved to the destination account.</label>
@@ -161,9 +183,16 @@
           <div fxLayoutAlign="center center">
             <button mat-raised-button color="primary" (click)="addEscrowToAutoReleaser()" [disabled]="loadingData || autoReleaseActivated">Activate Auto Release</button>
           </div>
+
+          <div *ngIf="loadingData && !autoReleaseActivated" fxLayoutAlign="center center">
+            <label>Loading some things...</label>
+            <mat-progress-spinner color="primary" mode="indeterminate" diameter=25></mat-progress-spinner>
+          </div>
         </div>
 
-        <div style="padding-top: 0.5em;" fxLayoutGap="0.5em" fxLayoutAlign="center center">
+        <label class="success" *ngIf="autoReleaseActivated">Congratulations! You have activated the "Auto Release" feature of your Escrow! Now you can lean back and forget about your Escrow - WE will handle it for you!</label>
+
+        <div style="padding-top: 1em;" fxLayoutGap="0.5em" fxLayoutAlign="center center">
             <button mat-raised-button (click)="close()" [disabled]="loadingData">Close</button>
         </div>
     </mat-card>
