@@ -140,6 +140,12 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
       else
         this.cancelAfterDateTime = null;
     } else {
+      if(this.cancelafterDateInput && this.cancelafterDateInput.length == 4 && Number.isInteger(Number(this.cancelafterDateInput)))
+        this.cancelafterDateInput+="-"
+
+      if(this.cancelafterDateInput && this.cancelafterDateInput.length == 7 && Number.isInteger(Number(this.cancelafterDateInput.substring(5,7))))
+        this.cancelafterDateInput+="-"
+
       this.cancelAfterDateTime = this.handleDateAndTimeNonPicker(this.cancelafterDateInput, this.cancelafterTimeInput);
     }
 
@@ -152,6 +158,12 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
       else
         this.finishAfterDateTime = null;
     } else {
+      if(this.finishafterDateInput && this.finishafterDateInput.length == 4 && Number.isInteger(Number(this.finishafterDateInput)))
+        this.finishafterDateInput+="-"
+
+      if(this.finishafterDateInput && this.finishafterDateInput.length == 7 && Number.isInteger(Number(this.finishafterDateInput.substring(5,7))))
+        this.finishafterDateInput+="-"
+
       this.finishAfterDateTime = this.handleDateAndTimeNonPicker(this.finishafterDateInput, this.finishafterTimeInput);
     }
     
@@ -202,6 +214,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
 
   handleDateAndTimeNonPicker(dateInput: string, timeInput: string): Date {
     let dateTime:Date = null;
+
     if(dateInput && dateInput.trim().length > 0)
       dateTime = new Date(dateInput.trim());
     else
@@ -593,6 +606,21 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
   isAbleToAutoRelease(): boolean {
     return this.createdEscrow && this.createdEscrow.FinishAfter && !this.createdEscrow.Condition && (!this.createdEscrow.CancelAfter || (this.createdEscrow.CancelAfter - this.createdEscrow.FinishAfter) > 90*60)
   }
+
+  getExpectedAutoReleaseTime(): string {
+    if(this.createdEscrow.FinishAfter) {
+        let expectedRelease:Date = new Date(normalizer.rippleEpocheTimeToUTC(this.createdEscrow.FinishAfter));
+
+        //set execution time to now + next hour + 5 min in case to enable auto release for already finishable escrows
+        if(expectedRelease.getTime() < Date.now())
+            expectedRelease.setTime(Date.now());
+
+        expectedRelease.setHours(expectedRelease.getHours()+1);
+        expectedRelease.setMinutes(5,0,0);
+        return expectedRelease.toLocaleString();
+    } else
+        return "-";
+}
 
   close() {
     if (typeof window.ReactNativeWebView !== 'undefined') {

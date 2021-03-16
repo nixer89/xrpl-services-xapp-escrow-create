@@ -18,24 +18,26 @@
   <mat-step completed="false" editable="false">
     <mat-card fxLayout="column" fxLayoutGap="0.5em">
         <ng-template matStepLabel>Escrow Owner</ng-template>
-        <label class="loading">What is the account you want to create the Escrow with?</label>
-        <label *ngIf="originalAccountInfo && originalAccountInfo.Account">Currently selected:</label>
-        <label *ngIf="originalAccountInfo && originalAccountInfo.Account">{{originalAccountInfo.Account}}</label>
+        <div fxLayout="column" fxLayoutGap="0.5em" *ngIf="originalAccountInfo">
+          <label class="loading">What is the account you want to create the Escrow with?</label>
+          <label *ngIf="originalAccountInfo && originalAccountInfo.Account">Currently selected:</label>
+          <label *ngIf="originalAccountInfo && originalAccountInfo.Account">{{originalAccountInfo.Account}}</label>
 
-        <div fxLayoutAlign="start center" style="padding-top: 0.5em;">
-          <button mat-raised-button color="primary" (click)="signInWithEscrowOwner()" [disabled]="loadingData">{{originalAccountInfo && originalAccountInfo.Account ? 'Change Account' : 'Sign In' }}</button>
+          <div fxLayoutAlign="start center" style="padding-top: 0.5em;">
+            <button mat-raised-button color="primary" (click)="signInWithEscrowOwner()" [disabled]="loadingData">{{originalAccountInfo && originalAccountInfo.Account ? 'Change Account' : 'Sign In' }}</button>
+          </div>
+
+          <label class="warning" *ngIf="originalAccountInfo && !originalAccountInfo.Account">Account not activated on {{testMode ? 'Testnet' : 'Mainnet'}}.</label>
         </div>
 
-        <label class="warning" *ngIf="originalAccountInfo && !originalAccountInfo.Account">Account not activated on {{testMode ? 'Testnet' : 'Mainnet'}}.</label>
-
-        <div *ngIf="loadingData" fxLayoutAlign="center center">
+        <div *ngIf="!originalAccountInfo || loadingData" fxLayoutAlign="center center">
           <label>Loading...</label>
           <mat-progress-spinner color="primary" mode="indeterminate" diameter=25></mat-progress-spinner>
         </div>
 
         <div style="padding-top: 0.5em;" fxLayoutGap="0.5em">
             <button mat-raised-button color="primary" (click)="moveNext()" [disabled]="!originalAccountInfo || !originalAccountInfo.Account || loadingData">Next</button>
-            <button mat-raised-button (click)="moveBack()" [disabled]="loadingData">Back</button>
+            <button mat-raised-button (click)="moveBack()" [disabled]="!originalAccountInfo || loadingData">Back</button>
         </div>
     </mat-card>
   </mat-step>
@@ -175,10 +177,12 @@
           <label> - no CancelAfter or CancelAfter > 90min past FinishAfter</label>
         </div>
         <div *ngIf="isAbleToAutoRelease() && !autoReleaseActivated" fxLayout="column" fxLayoutGap="0.5em">
-          <label class="loading">Do you want to add your Escrow to the "Escrow Releaser" of xumm.community?</label>
-          <label>Adding your escrow to this service comes with a fee of 1 XRP.</label>
-          <label>Once the Escrow is finished, the service will take care that the funds are moved to the destination account.</label>
-          <label>This does not happen automatically! (you need to submit a EscrowFinish transaction)</label>
+          <label class="success">Great! Your Escrow has been created!</label>
+          <label class="loading">Do you want to add your Escrow to the "Escrow Releaser" service of xumm.community?</label>
+          <label>Once an Escrow is finished, it has to be 'released'. This does not happen automatically - an EscrowFinish transaction is needed.</label>
+          <label>You can add your Escrow to our "Escrow Realser" service and we will release your Escrow automatically for you at:</label>
+          <label class="loading">{{getExpectedAutoReleaseTime()}}</label>
+          <label>Adding your Escrow to the service comes with a fee of 1 XRP.</label>
           <label></label>
           <div fxLayoutAlign="center center">
             <button mat-raised-button color="primary" (click)="addEscrowToAutoReleaser()" [disabled]="loadingData || autoReleaseActivated">Activate Auto Release</button>
@@ -190,7 +194,7 @@
           </div>
         </div>
 
-        <label class="success" *ngIf="autoReleaseActivated">Congratulations! You have activated the "Auto Release" feature of your Escrow! Now you can lean back and forget about your Escrow - WE will handle it for you!</label>
+        <label class="success" *ngIf="autoReleaseActivated">Congratulations! You have activated the automatic "Escrow Releaser" service of your Escrow! Now you can lean back and forget about your Escrow - we will release it for you at {{getExpectedAutoReleaseTime()}} !</label>
 
         <div style="padding-top: 1em;" fxLayoutGap="0.5em" fxLayoutAlign="center center">
             <button mat-raised-button (click)="close()" [disabled]="loadingData">Close</button>

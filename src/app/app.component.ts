@@ -13,7 +13,6 @@ export class AppComponent implements OnInit {
   title = 'xumm-xapp-escrow-create';
   darkMode:boolean = true;
 
-  ottLoaded:Promise<boolean>;
   infoLabel:string = null;
 
   ottReceived: Subject<any> = new Subject<any>();
@@ -46,9 +45,7 @@ export class AppComponent implements OnInit {
       if(xAppToken) {
         let ottResponse:any = await this.xummService.getxAppOTTData(xAppToken);
 
-        this.ottLoaded = Promise.resolve(true);
-
-        setTimeout(() => {this.ottReceived.next(ottResponse);} , 200);     
+        this.ottReceived.next(ottResponse);
       }
     });
   }

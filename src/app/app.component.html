@@ -1,11 +1,5 @@
 <div class="{{darkMode ? 'dark-theme' : 'light-theme'}}">
   <!--label *ngIf="infoLabel">AppComponent: {{infoLabel}}</label-->
-  <div *ngIf="!ottLoaded" fxLayout="column" fxLayoutAlign="center center">
-    <label>Loading some things...</label>
-    <mat-progress-spinner color="primary" mode="indeterminate" diameter=25></mat-progress-spinner>
-  </div>
-  <div *ngIf="ottLoaded | async">
-    <escrowcreate [ottChanged]="ottReceived.asObservable()"></escrowcreate>
-    <app-footer></app-footer>
-  </div>
+  <escrowcreate [ottChanged]="ottReceived.asObservable()"></escrowcreate>
+  <app-footer></app-footer>
 </div>
