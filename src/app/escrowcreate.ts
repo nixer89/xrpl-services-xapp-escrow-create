@@ -96,26 +96,30 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
 
       if(ottData) {
         console.log("ottResponse: " + JSON.stringify(ottData));
+
+        this.testMode = ottData.nodetype == 'TESTNET';
+        this.infoLabel = "changed mode to testnet: " + this.testMode;
+
+        var bodyStyles = document.body.style;
+        if(ottData && ottData.style && ottData.style == 'LIGHT') {
+          console.log("setting light style");
+          bodyStyles.setProperty('--background-color', 'rgba(238,238,238,.5)');
+          this.overlayContainer.getContainerElement().classList.remove('dark-theme');
+          this.overlayContainer.getContainerElement().classList.add('light-theme');
+        } else {
+          console.log("setting dark style");
+          bodyStyles.setProperty('--background-color', 'rgba(50, 50, 50)');
+          this.overlayContainer.getContainerElement().classList.remove('light-theme');
+          this.overlayContainer.getContainerElement().classList.add('dark-theme');
+        }
+
         if(ottData && ottData.account && ottData.accountaccess == 'FULL') {
-          
-          this.testMode = ottData.nodetype == 'TESTNET';
-          this.infoLabel = "changed mode to testnet: " + this.testMode;
 
           await this.loadAccountData(ottData.account);
 
-          var bodyStyles = document.body.style;
-          if(ottData && ottData.style && ottData.style == 'LIGHT') {
-            console.log("setting light style");
-            bodyStyles.setProperty('--background-color', 'rgba(238,238,238,.5)');
-            this.overlayContainer.getContainerElement().classList.remove('dark-theme');
-            this.overlayContainer.getContainerElement().classList.add('light-theme');
-          } else {
-            console.log("setting dark style");
-            bodyStyles.setProperty('--background-color', 'rgba(50, 50, 50)');
-            this.overlayContainer.getContainerElement().classList.remove('light-theme');
-            this.overlayContainer.getContainerElement().classList.add('dark-theme');
-          }
           //await this.loadAccountData(ottData.account); //false = ottResponse.node == 'TESTNET' 
+        } else {
+          this.originalAccountInfo = "no account";
         }
       }
     });
@@ -249,7 +253,8 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
         forceAccount: true
       },
       txjson: {
-        TransactionType: "EscrowCreate"
+        TransactionType: "EscrowCreate",
+        Account: this.originalAccountInfo.Account
       }, custom_meta: {
         instruction: ""
       }
@@ -347,13 +352,13 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
         console.log(JSON.stringify(xummResponse));
         if(!xummResponse || !xummResponse.uuid) {
           this.loadingData = false;
-          this.snackBar.open("Error contacting XUMM backend", null, {panelClass: 'snackbar-failed', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
+          this.snackBar.open("Error contacting XUMM backend", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
           return;
         }        
     } catch (err) {
         //console.log(JSON.stringify(err));
         this.loadingData = false;
-        this.snackBar.open("Could not contact XUMM backend", null, {panelClass: 'snackbar-failed', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
+        this.snackBar.open("Could not contact XUMM backend", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
         return;
     }
 
@@ -392,35 +397,41 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
                 if(transactionResult && transactionResult.success) {
                   if(payloadRequest.options.signinToValidate) {
                     if(payloadRequest.payload.custom_meta && payloadRequest.payload.custom_meta.blob && payloadRequest.payload.custom_meta.blob.source == "EscrowOwner") {
-                      this.testMode = true;
                       await this.loadAccountData(transactionResult.account);
+                      this.snackBar.open("Sign In successfull", null, {panelClass: 'snackbar-success', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
                     } else {
-                      this.destinationInput = transactionResult.account;
-                      this.checkChanges();
+                      if(await this.checkIfAccountExists(transactionResult.account)) {
+                        this.destinationInput = transactionResult.account;
+                        this.snackBar.open("Destination address inserted", null, {panelClass: 'snackbar-success', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
+                        this.checkChanges();
+                      } else {
+                        this.destinationInput = null;
+                        this.snackBar.open("Account not existent on " + (this.testMode ? "TESTNET" : "MAINNET"), null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
+                        this.checkChanges();
+                      }
                     }
-                  }
-                  else {
+                  } else {
                     if(payloadRequest.payload.txjson.TransactionType.toLowerCase() === 'payment' && payloadRequest.payload.custom_meta && payloadRequest.payload.custom_meta.blob) {
-                      this.snackBar.open("Auto Release activated!", null, {panelClass: 'snackbar-success', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
+                      this.snackBar.open("Auto Release activated!", null, {panelClass: 'snackbar-success', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
                       this.autoReleaseActivated = true;
                     } else {
-                      this.snackBar.open("Escrow created!", null, {panelClass: 'snackbar-success', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
+                      this.snackBar.open("Escrow created!", null, {panelClass: 'snackbar-success', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
                       await this.loadCreatedEscrowData(transactionResult.txid);
                       this.moveNext();
                     }
                   }
                 } else {
-                  this.snackBar.open(trxType+" not successfull!", null, {panelClass: 'snackbar-failed', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
+                  this.snackBar.open(trxType+" not successfull!", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
                 }
             } else {
-              this.snackBar.open(trxType+" not successfull!", null, {panelClass: 'snackbar-failed', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
+              this.snackBar.open(trxType+" not successfull!", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
             }
 
             this.loadingData = false;
 
         } else if(message.expired || message.expires_in_seconds <= 0) {
           this.loadingData = false;
-          this.snackBar.open(trxType+" not successfull!", null, {panelClass: 'snackbar-failed', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
+          this.snackBar.open(trxType+" not successfull!", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
         }
     });
   }
@@ -478,14 +489,24 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
         command: 'scanQr'
       }));
 
-      window.addEventListener("message", event => {
+      window.addEventListener("message", async event => {
         console.log(event.data);
         let qrResult = JSON.parse(event.data);
         //this.infoLabel = "QR-result: " + JSON.stringify(qrResult);
         if(qrResult.method == "scanQr" && qrResult.reason == "SCANNED" && isValidXRPAddress(qrResult.qrContents)) {
-          this.destinationInput = qrResult.qrContents;
+          if((await this.checkIfAccountExists(qrResult.qrContents))) {
+            this.destinationInput = qrResult.qrContents;
+            this.snackBar.open("Destination address inserted", null, {panelClass: 'snackbar-success', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
+            this.checkChanges();
+          } else {
+            this.destinationInput = null;
+            this.snackBar.open("Account not existent on " + (this.testMode ? "TESTNET" : "MAINNET"), null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
+            this.checkChanges();
+          }
+        } else {
+          this.destinationInput = null;
+          this.snackBar.open("Invalid XRPL account", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
           this.checkChanges();
-          this.snackBar.open("Destination address inserted", null, {panelClass: 'snackbar-success', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
         }
         this.loadingData = false;
       });
@@ -530,7 +551,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
 
   async loadAccountData(xrplAccount: string) {
     //this.infoLabel = "loading " + xrplAccount;
-    if(xrplAccount) {
+    if(xrplAccount && isValidXRPAddress(xrplAccount)) {
       //this.googleAnalytics.analyticsEventEmitter('loading_account_data', 'account_data', 'xrpl_transactions_component');
       this.loadingData = true;
 
@@ -550,10 +571,41 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
           this.originalAccountInfo = message_acc_info;
         }
       } else {
-        this.originalAccountInfo = null;
+        this.originalAccountInfo = "no account";
       }
 
       this.loadingData = false;
+    } else {
+      this.originalAccountInfo = "no account"
+    }
+  }
+
+  async checkIfAccountExists(xrplAccount: string) {
+    //this.infoLabel = "loading " + xrplAccount;
+    if(xrplAccount) {
+      //this.googleAnalytics.analyticsEventEmitter('loading_account_data', 'account_data', 'xrpl_transactions_component');
+      this.loadingData = true;
+
+      let account_info_request:any = {
+        command: "account_info",
+        account: xrplAccount,
+        "strict": true,
+      }
+
+      let message_acc_info:any = await this.xrplWebSocket.getWebsocketMessage("xrpl-transactions", account_info_request, this.testMode);
+      //console.log("xrpl-transactions account info: " + JSON.stringify(message_acc_info));
+      this.infoLabel = JSON.stringify(message_acc_info);
+      if(message_acc_info && message_acc_info.status && message_acc_info.type && message_acc_info.type === 'response') {
+        if(message_acc_info.status === 'success' && message_acc_info.result && message_acc_info.result.account_data) {
+          return message_acc_info.result.account_data.Account && isValidXRPAddress(message_acc_info.result.account_data.Account);
+        } else {
+          return false
+        }
+      } else {
+        return false;
+      }
+    } else {
+      return false;
     }
   }
 
@@ -590,6 +642,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
           },
           txjson: {
               TransactionType: "Payment",
+              Account: this.originalAccountInfo.Account,
               Memos : [{Memo: {MemoType: Buffer.from("[https://xumm.community]-Memo", 'utf8').toString('hex').toUpperCase(), MemoData: Buffer.from("Payment for Auto Release of Escrow! Owner:" + this.createdEscrow.Account + " Sequence: " + this.createdEscrow.Sequence, 'utf8').toString('hex').toUpperCase()}}]
           },
           custom_meta: {
@@ -651,23 +704,6 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
         item.completed = false;
       }
     });
-
-    switch(this.stepper.selectedIndex) {
-      case 0: break;
-      case 1: {
-        break;
-      }
-      case 2: {
-
-        break;
-      }
-      case 3: {
-        break;
-      }
-      case 4: {
-        break;
-      }
-    }
 
     this.stepper.previous();
   }

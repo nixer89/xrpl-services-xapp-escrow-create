@@ -27,7 +27,7 @@
             <button mat-raised-button color="primary" (click)="signInWithEscrowOwner()" [disabled]="loadingData">{{originalAccountInfo && originalAccountInfo.Account ? 'Change Account' : 'Sign In' }}</button>
           </div>
 
-          <label class="warning" *ngIf="originalAccountInfo && !originalAccountInfo.Account">Account not activated on {{testMode ? 'Testnet' : 'Mainnet'}}.</label>
+          <label class="warning" *ngIf="originalAccountInfo && originalAccountInfo.error && originalAccountInfo.error == 'actNotFound' ">Account not activated on {{testMode ? 'Testnet' : 'Mainnet'}}.</label>
         </div>
 
         <div *ngIf="!originalAccountInfo || loadingData" fxLayoutAlign="center center">
@@ -55,8 +55,8 @@
 
         <div fxLayout="row" fxLayoutGap="0.5em" fxLayoutAlign="start center">
           <label>Alternatively:</label>
-          <button mat-raised-button color="primary" (click)="scanForDestination()" [disabled]="loadingData"><mat-icon>qr_code_scanner</mat-icon></button>
-          <button mat-raised-button color="primary" (click)="signInForDestination()" [disabled]="loadingData"><mat-icon>login</mat-icon></button>
+          <button mat-raised-button color="primary" (click)="scanForDestination()" [disabled]="loadingData">Scan <mat-icon>qr_code_scanner</mat-icon></button>
+          <button mat-raised-button color="primary" (click)="signInForDestination()" [disabled]="loadingData">Sign <mat-icon>login</mat-icon></button>
         </div>
 
         <div *ngIf="loadingData" fxLayoutAlign="center center">
