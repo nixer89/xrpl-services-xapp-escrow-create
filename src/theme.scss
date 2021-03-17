@@ -2,11 +2,145 @@
 
 @include mat-core();
 
+$md-xummblue: (
+    50 : #e6eaff,
+    100 : #c1cbff,
+    200 : #98a9ff,
+    300 : #6e86ff,
+    400 : #4f6cff,
+    500 : #3052ff,
+    600 : #2b4bff,
+    700 : #2441ff,
+    800 : #1e38ff,
+    900 : #1328ff,
+    A100 : #ffffff,
+    A200 : #fafaff,
+    A400 : #c7cbff,
+    A700 : #adb3ff,
+    contrast: (
+        50 : #000000,
+        100 : #000000,
+        200 : #000000,
+        300 : #000000,
+        400 : #ffffff,
+        500 : #ffffff,
+        600 : #ffffff,
+        700 : #ffffff,
+        800 : #ffffff,
+        900 : #ffffff,
+        A100 : #000000,
+        A200 : #000000,
+        A400 : #000000,
+        A700 : #000000,
+    )
+);
+
+$md-xummorange: (
+    50 : #fef7ea,
+    100 : #fdecc9,
+    200 : #fcdfa6,
+    300 : #fad282,
+    400 : #f9c967,
+    500 : #f8bf4c,
+    600 : #f7b945,
+    700 : #f6b13c,
+    800 : #f5a933,
+    900 : #f39b24,
+    A100 : #ffffff,
+    A200 : #fffcf9,
+    A400 : #ffe6c6,
+    A700 : #ffdaad,
+    contrast: (
+        50 : #000000,
+        100 : #000000,
+        200 : #000000,
+        300 : #000000,
+        400 : #000000,
+        500 : #000000,
+        600 : #000000,
+        700 : #000000,
+        800 : #000000,
+        900 : #000000,
+        A100 : #000000,
+        A200 : #000000,
+        A400 : #000000,
+        A700 : #000000,
+    )
+);
+
+$md-xummgreen: (
+    50 : #e7fbf2,
+    100 : #c4f5e0,
+    200 : #9deecb,
+    300 : #76e7b6,
+    400 : #58e1a6,
+    500 : #3bdc96,
+    600 : #35d88e,
+    700 : #2dd383,
+    800 : #26ce79,
+    900 : #19c568,
+    A100 : #f8fffb,
+    A200 : #c5ffde,
+    A400 : #92ffc1,
+    A700 : #79ffb2,
+    contrast: (
+        50 : #000000,
+        100 : #000000,
+        200 : #000000,
+        300 : #000000,
+        400 : #000000,
+        500 : #000000,
+        600 : #000000,
+        700 : #000000,
+        800 : #000000,
+        900 : #000000,
+        A100 : #000000,
+        A200 : #000000,
+        A400 : #000000,
+        A700 : #000000,
+    )
+);
+
+$md-xummred: (
+    50 : #ffebeb,
+    100 : #ffcece,
+    200 : #ffadad,
+    300 : #ff8c8c,
+    400 : #ff7474,
+    500 : #ff5b5b,
+    600 : #ff5353,
+    700 : #ff4949,
+    800 : #ff4040,
+    900 : #ff2f2f,
+    A100 : #ffffff,
+    A200 : #ffffff,
+    A400 : #ffdada,
+    A700 : #ffc1c1,
+    contrast: (
+        50 : #000000,
+        100 : #000000,
+        200 : #000000,
+        300 : #000000,
+        400 : #000000,
+        500 : #000000,
+        600 : #000000,
+        700 : #ffffff,
+        800 : #ffffff,
+        900 : #ffffff,
+        A100 : #000000,
+        A200 : #000000,
+        A400 : #000000,
+        A700 : #000000,
+    )
+);
+
+
+
 .light-theme {
-  $primary: mat-palette($mat-indigo);
-  $accent: mat-palette($mat-pink, A200, A100, A400);
-  $warn: mat-palette($mat-red);
-  $light-theme: mat-light-theme($primary, $accent, $warn);
+  $light-primary: mat-palette($md-xummblue, 0.06);
+  $light-accent: mat-palette($md-xummorange, 0.06);
+  $light-warn: mat-palette($md-xummred, 0.06);
+  $light-theme: mat-light-theme($light-primary, $light-accent, $light-warn);
 
   .mat-expansion-panel {
     background-color: rgba(238,238,238, 0.5) !important;
@@ -57,9 +191,9 @@
 
 // Our dark theme
 .dark-theme {
-  $dark-primary: mat-palette($mat-indigo);
-  $dark-accent: mat-palette($mat-amber, A200, A100, A400);
-  $dark-warn: mat-palette($mat-red);   
+  $dark-primary: mat-palette($md-xummblue, 0.22);
+  $dark-accent: mat-palette($md-xummorange, 0.22);
+  $dark-warn: mat-palette($md-xummred, 0.22);  
   $dark-theme: mat-dark-theme($dark-primary, $dark-accent, $dark-warn);
 
   a {
@@ -127,4 +261,151 @@
   }
 
   @include angular-material-theme($dark-theme);
+}
+
+
+.moonlight-theme {
+  $moonlight-primary: mat-palette($md-xummblue, 0.17);
+  $moonlight-accent: mat-palette($md-xummorange, 0.17);
+  $moonlight-warn: mat-palette($md-xummred, 0.17);
+  $moonlight-theme: mat-moon-theme($moonlight-primary, $moonlight-accent, $moonlight-warn);
+
+  a {
+    color: #FFB300;
+  }
+
+  a:hover {
+    color: #FFA000;
+  }
+
+  a:active {
+    color: #FF8F00;
+  }
+
+  .mat-form-field.mat-focused .mat-form-field-label {
+    color: rgba(255, 255, 255, 0.7) !important;
+  }
+
+  .warning {
+    color: #FF6B6B;
+  }
+
+  .loading {
+    color: #FFB300;
+  }
+
+  .success {
+    color: #00B300
+  }
+
+  .mat-expansion-panel {
+    background-color: #181A21 !important;
+  }
+
+  .mat-expansion-panel.expansion-panel-light {
+    background-color: #303030 !important;
+  }
+
+  .mat-expansion-panel-header.expansion-panel-light {
+    background-color: #303030 !important;
+  }
+
+  .mat-expansion-panel.expansion-panel-darker {
+    background-color: #202020 !important;
+  }
+
+  .mat-expansion-panel-header.expansion-panel-darker {
+    background-color: #202020 !important;
+  }
+
+  .theme-background {
+    background-color:#181A21 !important;
+  }
+
+  .snackbar-success {
+    background-color: #303030 !important;
+  }
+
+  .snackbar-failed {
+    background-color: #303030 !important;
+  }
+
+  .mat-option.mat-selected:not(.mat-option-disabled) {
+    color: #FF8F00 !important
+  }
+
+  @include angular-material-theme($moonlight-theme);
+}
+
+.royal-theme {
+  $royal-primary: mat-palette($md-xummblue, 0.17);
+  $royal-accent: mat-palette($md-xummorange, 0.17);
+  $royal-warn: mat-palette($md-xummred, 0.17);
+  $royal-theme: mat-royal-theme($royal-primary, $royal-accent, $royal-warn);
+
+  a {
+    color: #FFB300;
+  }
+
+  a:hover {
+    color: #FFA000;
+  }
+
+  a:active {
+    color: #FF8F00;
+  }
+
+  .mat-form-field.mat-focused .mat-form-field-label {
+    color: rgba(255, 255, 255, 0.7) !important;
+  } 
+
+  .warning {
+    color: #FF6B6B;
+  }
+
+  .loading {
+    color: #FFB300;
+  }
+
+  .success {
+    color: #00B300
+  }
+
+  .mat-expansion-panel {
+    background-color: rgba(50, 50, 50, 0.5) !important;
+  }
+
+  .mat-expansion-panel.expansion-panel-light {
+    background-color: #303030 !important;
+  }
+
+  .mat-expansion-panel-header.expansion-panel-light {
+    background-color: #303030 !important;
+  }
+
+  .mat-expansion-panel.expansion-panel-darker {
+    background-color: #202020 !important;
+  }
+
+  .mat-expansion-panel-header.expansion-panel-darker {
+    background-color: #202020 !important;
+  }
+
+  .theme-background {
+    background-color:rgba(50, 50, 50, 0.5) !important;
+  }
+
+  .snackbar-success {
+    background-color: #303030 !important;
+  }
+
+  .snackbar-failed {
+    background-color: #303030 !important;
+  }
+
+  .mat-option.mat-selected:not(.mat-option-disabled) {
+    color: #FF8F00 !important
+  }
+
+  @include angular-material-theme($royal-theme);
 }

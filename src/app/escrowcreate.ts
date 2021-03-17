@@ -100,18 +100,41 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
         this.testMode = ottData.nodetype == 'TESTNET';
         this.infoLabel = "changed mode to testnet: " + this.testMode;
 
-        var bodyStyles = document.body.style;
-        if(ottData && ottData.style && ottData.style == 'LIGHT') {
-          console.log("setting light style");
-          bodyStyles.setProperty('--background-color', 'rgba(238,238,238,.5)');
-          this.overlayContainer.getContainerElement().classList.remove('dark-theme');
-          this.overlayContainer.getContainerElement().classList.add('light-theme');
-        } else {
-          console.log("setting dark style");
-          bodyStyles.setProperty('--background-color', 'rgba(50, 50, 50)');
-          this.overlayContainer.getContainerElement().classList.remove('light-theme');
-          this.overlayContainer.getContainerElement().classList.add('dark-theme');
+        let themeClass = 'dark-theme';
+        let backgroundColor = '#000000';
+
+        if(ottData.style) {
+          switch(ottData.style) {
+            case 'LIGHT':
+              themeClass = 'light-theme';
+              backgroundColor = '#FFFFFF';
+              break;
+            case 'DARK':
+              themeClass = 'dark-theme';
+              backgroundColor = '#000000';
+              break;
+            case 'MOONLIGHT':
+              themeClass = 'moonlight-theme';
+              backgroundColor = '#181A21';
+              break;
+            case 'ROYAL':
+              themeClass = 'royal-theme';
+              backgroundColor = '#030B36';
+              break;
+            default:
+              themeClass = 'dark-theme';
+              backgroundColor = '#000000';
+              break;
+          }
         }
+
+        var bodyStyles = document.body.style;
+        bodyStyles.setProperty('--background-color', backgroundColor);
+        this.overlayContainer.getContainerElement().classList.remove('dark-theme');
+        this.overlayContainer.getContainerElement().classList.remove('light-theme');
+        this.overlayContainer.getContainerElement().classList.remove('moonlight-theme');
+        this.overlayContainer.getContainerElement().classList.remove('royal-theme');
+        this.overlayContainer.getContainerElement().classList.add(themeClass);
 
         if(ottData && ottData.account && ottData.accountaccess == 'FULL') {
 

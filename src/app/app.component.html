@@ -1,4 +1,4 @@
-<div class="{{darkMode ? 'dark-theme' : 'light-theme'}}">
+<div [class]="themeClass">
   <!--label *ngIf="infoLabel">AppComponent: {{infoLabel}}</label-->
   <escrowcreate [ottChanged]="ottReceived.asObservable()"></escrowcreate>
   <app-footer></app-footer>
