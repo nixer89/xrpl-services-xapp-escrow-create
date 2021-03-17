@@ -1,5 +1,5 @@
-<!--label *ngIf="infoLabel">{{infoLabel}}</label-->
-<!-- label *ngIf="originalAccountInfo">{{originalAccountInfo}}</label-->
+<label *ngIf="infoLabel">{{infoLabel}}</label>
+<label *ngIf="infoLabel2">{{infoLabel2}}</label>
 <mat-vertical-stepper linear #escrowStepper>
 
   <mat-step completed="false" editable="false">
@@ -55,9 +55,12 @@
 
         <div fxLayout="row" fxLayoutGap="0.5em" fxLayoutAlign="start center">
           <label>Alternatively:</label>
-          <button mat-raised-button color="primary" (click)="scanForDestination()" [disabled]="loadingData">Scan <mat-icon>qr_code_scanner</mat-icon></button>
           <button mat-raised-button color="primary" (click)="signInForDestination()" [disabled]="loadingData">Sign <mat-icon>login</mat-icon></button>
+          <button mat-raised-button color="primary" (click)="scanForDestination()" [disabled]="loadingData">Scan <mat-icon>qr_code_scanner</mat-icon></button>
         </div>
+
+        <label *ngIf="validAddress && !loadingData && !escrowDestinationSigned" class="loading">You didn't Sign with this account. Make sure it is the correct address and it is NOT an exchange or other custodial wallet!</label>
+        <label *ngIf="validAddress && !loadingData && escrowDestinationHasDestTagEnabled" class="warning">The destination account requires a DestinationTag. For the safety of your funds we don't allow sending Escrows to this account.</label>
 
         <div *ngIf="loadingData" fxLayoutAlign="center center">
           <label>Loading...</label>
@@ -65,7 +68,7 @@
         </div>
 
         <div style="padding-top: 0.5em;" fxLayoutGap="0.5em">
-            <button mat-raised-button color="primary" (click)="moveNext()" [disabled]="!validAddress || loadingData">Next</button>
+            <button mat-raised-button color="primary" (click)="moveNext()" [disabled]="!validAddress || loadingData || escrowDestinationHasDestTagEnabled">Next</button>
             <button mat-raised-button (click)="moveBack()" [disabled]="loadingData">Back</button>
         </div>
     </mat-card>
@@ -105,10 +108,13 @@
         <label class="loading">Please define a time your Escrow can be finished earliest. If you do not provide this data then you have to define a CancelAfter time or condition.</label>
         <form fxLayout="column" fxLayoutGap="0.5em" style="padding-top: 1em;">
           <mat-form-field>
-            <input matInput name="finishafterdate" [type]="dateTimePickerSupported ? 'date' : 'text'" [placeholder]="dateTimePickerSupported ? 'Choose a Date' : 'yyyy-mm-dd'" [(ngModel)]="finishafterDateInput" (ngModelChange)="checkChanges()">
+            <mat-label>Choose a date</mat-label>
+            <input matInput name="finishafterdate" [matDatepicker]="picker" [formControl]="dateFormCtrl" (dateChange)="checkChanges()">
+            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
           </mat-form-field>
           <mat-form-field>
-            <input matInput name="finishaftertime" [type]="dateTimePickerSupported ? 'time' : 'text'" step="2" [placeholder]="dateTimePickerSupported ? 'Choose a Time' : 'HH:mm:ss (24h format)'" [(ngModel)]="finishafterTimeInput" (ngModelChange)="checkChanges()">
+            <input matInput name="finishaftertime" type="text" step="2" placeholder="HH:mm:ss (24h format)" [(ngModel)]="finishafterTimeInput" (ngModelChange)="checkChanges()">
           </mat-form-field>
           <mat-hint *ngIf="(finishafterTimeInput || finishafterDateInput) && !validFinishAfter && !finishDateInFuture">Invalid date/time.</mat-hint>
           <mat-hint *ngIf="finishDateInFuture">Finish After needs to be in the future.</mat-hint>
