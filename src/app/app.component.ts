@@ -13,19 +13,38 @@ export class AppComponent implements OnInit {
   title = 'xumm-xapp-escrow-create';
   themeClass:string = "dark-theme";
   backgroundColor: string = "#000000";
+  
+  receivedParams = false;
+  alreadySent = false;
 
   infoLabel:string = null;
 
   ottReceived: Subject<any> = new Subject<any>();
 
+  timeout1: any;
+  timeout2: any;
+
   constructor(private route: ActivatedRoute, private xummService: XummService, private overlayContainer: OverlayContainer) { }
 
   ngOnInit() {
     this.route.queryParams.subscribe(async params => {
+      if(this.timeout1) {
+        //console.log("clearing timeout1");
+        clearTimeout(this.timeout1)
+      }
+  
+      if(this.timeout2) {
+        //console.log("clearing timeout2");
+        clearTimeout(this.timeout2)
+      }
+
       let xAppToken = params.xAppToken;
       let xAppStyle = params.xAppStyle;
 
-      console.log("received pararms: " + JSON.stringify(params));
+      this.receivedParams = !(xAppToken == null && xAppStyle == null);
+      //console.log("has params received: " + this.receivedParams)
+
+      //console.log("received pararms: " + JSON.stringify(params));
       this.infoLabel = "params: " + JSON.stringify(params);
 
       if(xAppStyle) {
@@ -64,9 +83,37 @@ export class AppComponent implements OnInit {
 
       if(xAppToken) {
         let ottResponse:any = await this.xummService.getxAppOTTData(xAppToken);
+        //console.log("ottResponse: " + JSON.stringify(ottResponse));
 
-        this.ottReceived.next(ottResponse);
+        this.alreadySent = true;
+
+        if(ottResponse && ottResponse.error) {
+          //console.log("error OTT, only sending app style");
+          this.ottReceived.next({style: xAppStyle});
+        } else {
+          this.ottReceived.next(ottResponse);
+          this.alreadySent = true;
+        }      
+      } else {
+        //didn't got an ott. Just send over the app style (even if not available)
+        this.timeout1 = setTimeout(() => {
+          //console.log("checking with: " + this.receivedParams);
+          if(this.receivedParams && !this.alreadySent) {
+            //console.log("only received appstyle")
+            this.ottReceived.next({style: xAppStyle});
+            this.alreadySent = true;
+          }
+        }, 1000);
       }
     });
+
+    this.timeout2 = setTimeout(() => {
+      //console.log("checking with2: " + this.receivedParams);
+      if(!this.receivedParams && !this.alreadySent) {
+        //console.log("didnt received any params")
+        this.ottReceived.next({style: null});
+        this.alreadySent = true;
+      }
+    }, 3000);
   }
 }

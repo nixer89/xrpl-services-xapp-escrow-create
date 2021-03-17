@@ -12,6 +12,8 @@ import { webSocket, WebSocketSubject} from 'rxjs/webSocket';
 import { Subscription, Observable } from 'rxjs';
 import { DeviceDetectorService } from 'ngx-device-detector';
 import { OverlayContainer } from '@angular/cdk/overlay';
+import * as flagUtils from './utils/flagutils';
+import { FormControl } from '@angular/forms';
 
 @Component({
   selector: 'escrowcreate',
@@ -54,6 +56,8 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
   @Input()
   ottChanged: Observable<any>;
 
+  dateFormCtrl:FormControl = new FormControl(new Date());
+
   websocket: WebSocketSubject<any>;
 
   originalAccountInfo:any;
@@ -88,17 +92,20 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
   escrowReleaseData: any = {};
 
   infoLabel:string = null;
+  infoLabel2:string = null;
   autoReleaseActivated:boolean = false;
+  escrowDestinationSigned:boolean = false;
+  escrowDestinationHasDestTagEnabled:boolean = false;
 
   ngOnInit() {
     this.ottReceived = this.ottChanged.subscribe(async ottData => {
-      this.infoLabel = JSON.stringify(ottData);
+      //this.infoLabel = JSON.stringify(ottData);
+      //console.log("ottReceived: " + JSON.stringify(ottData));
 
       if(ottData) {
-        console.log("ottResponse: " + JSON.stringify(ottData));
 
         this.testMode = ottData.nodetype == 'TESTNET';
-        this.infoLabel = "changed mode to testnet: " + this.testMode;
+        //this.infoLabel = "changed mode to testnet: " + this.testMode;
 
         let themeClass = 'dark-theme';
         let backgroundColor = '#000000';
@@ -149,7 +156,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
     //this.infoLabel = JSON.stringify(this.device.getDeviceInfo());
 
     //this.dateTimePickerSupported = !(this.device && this.device.getDeviceInfo() && this.device.getDeviceInfo().os_version && (this.device.getDeviceInfo().os_version.toLowerCase().includes('ios') || this.device.getDeviceInfo().browser.toLowerCase().includes('safari') || this.device.getDeviceInfo().browser.toLowerCase().includes('edge')));
-    this.dateTimePickerSupported = false;
+    this.dateTimePickerSupported = true;
   }
 
   ngOnDestroy() {
@@ -157,7 +164,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
       this.ottReceived.unsubscribe();
   }
 
-  checkChanges() {
+  checkChanges(signedDestinationAcc?: boolean) {
     //console.log("amountInput: " + this.amountInput);
     //console.log("destinationInput: " + this.destinationInput);
     
@@ -180,8 +187,11 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
     this.validCancelAfter = this.cancelAfterDateTime != null && this.cancelAfterDateTime.getTime() > 0;
 
     if(this.dateTimePickerSupported) {
-      if(this.finishafterDateInput && this.finishafterTimeInput)
-        this.finishAfterDateTime = new Date(this.finishafterDateInput.trim() + " " + this.finishafterTimeInput.trim());
+      if(this.dateFormCtrl && this.dateFormCtrl.value && this.finishafterTimeInput) {
+        let datePicker = new Date(this.dateFormCtrl.value);
+        this.infoLabel = datePicker.getFullYear() + "-" + ((datePicker.getMonth()+1) < 10 ? "0":"")+(datePicker.getMonth()+1) + "-" + datePicker.getDate() + "T" + this.finishafterTimeInput.trim();
+        this.finishAfterDateTime = new Date(datePicker.getFullYear() + "-" + ((datePicker.getMonth()+1) < 10 ? "0":"")+(datePicker.getMonth()+1) + "-" + datePicker.getDate() + "T" + this.finishafterTimeInput.trim());    
+      }
       else
         this.finishAfterDateTime = null;
     } else {
@@ -220,6 +230,9 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
       this.validAmount = this.amountInput && parseFloat(this.amountInput) >= 0.000001 && !this.escrowBiggerThanAvailable();
 
     this.validAddress = this.destinationInput && this.destinationInput.trim().length > 0 && isValidXRPAddress(this.destinationInput.trim());
+
+    if(this.validAddress)
+      this.escrowDestinationSigned = signedDestinationAcc;
 
     this.validCondition = this.passwordInput && this.passwordInput.trim().length > 0;
 
@@ -423,10 +436,10 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
                       await this.loadAccountData(transactionResult.account);
                       this.snackBar.open("Sign In successfull", null, {panelClass: 'snackbar-success', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
                     } else {
-                      if(await this.checkIfAccountExists(transactionResult.account)) {
+                      if(await this.checkIfDestinationAccountExists(transactionResult.account)) {
                         this.destinationInput = transactionResult.account;
                         this.snackBar.open("Destination address inserted", null, {panelClass: 'snackbar-success', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
-                        this.checkChanges();
+                        this.checkChanges(true);
                       } else {
                         this.destinationInput = null;
                         this.snackBar.open("Account not existent on " + (this.testMode ? "TESTNET" : "MAINNET"), null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
@@ -517,7 +530,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
         let qrResult = JSON.parse(event.data);
         //this.infoLabel = "QR-result: " + JSON.stringify(qrResult);
         if(qrResult.method == "scanQr" && qrResult.reason == "SCANNED" && isValidXRPAddress(qrResult.qrContents)) {
-          if((await this.checkIfAccountExists(qrResult.qrContents))) {
+          if((await this.checkIfDestinationAccountExists(qrResult.qrContents))) {
             this.destinationInput = qrResult.qrContents;
             this.snackBar.open("Destination address inserted", null, {panelClass: 'snackbar-success', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
             this.checkChanges();
@@ -526,6 +539,8 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
             this.snackBar.open("Account not existent on " + (this.testMode ? "TESTNET" : "MAINNET"), null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
             this.checkChanges();
           }
+        } else if(qrResult.method == "scanQr" && qrResult.reason == "USER_CLOSE") {
+          //do not do anything on user close
         } else {
           this.destinationInput = null;
           this.snackBar.open("Invalid XRPL account", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
@@ -586,7 +601,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
 
       let message_acc_info:any = await this.xrplWebSocket.getWebsocketMessage("xrpl-transactions", account_info_request, this.testMode);
       //console.log("xrpl-transactions account info: " + JSON.stringify(message_acc_info));
-      this.infoLabel = JSON.stringify(message_acc_info);
+      //this.infoLabel = JSON.stringify(message_acc_info);
       if(message_acc_info && message_acc_info.status && message_acc_info.type && message_acc_info.type === 'response') {
         if(message_acc_info.status === 'success' && message_acc_info.result && message_acc_info.result.account_data) {
           this.originalAccountInfo = message_acc_info.result.account_data;
@@ -603,7 +618,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
     }
   }
 
-  async checkIfAccountExists(xrplAccount: string) {
+  async checkIfDestinationAccountExists(xrplAccount: string) {
     //this.infoLabel = "loading " + xrplAccount;
     if(xrplAccount) {
       //this.googleAnalytics.analyticsEventEmitter('loading_account_data', 'account_data', 'xrpl_transactions_component');
@@ -617,10 +632,15 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
 
       let message_acc_info:any = await this.xrplWebSocket.getWebsocketMessage("xrpl-transactions", account_info_request, this.testMode);
       //console.log("xrpl-transactions account info: " + JSON.stringify(message_acc_info));
-      this.infoLabel = JSON.stringify(message_acc_info);
+      //this.infoLabel = JSON.stringify(message_acc_info);
       if(message_acc_info && message_acc_info.status && message_acc_info.type && message_acc_info.type === 'response') {
         if(message_acc_info.status === 'success' && message_acc_info.result && message_acc_info.result.account_data) {
-          return message_acc_info.result.account_data.Account && isValidXRPAddress(message_acc_info.result.account_data.Account);
+          let accData:any = message_acc_info.result.account_data;
+
+          if(accData.Flags)
+            this.escrowDestinationHasDestTagEnabled = flagUtils.isRequireDestinationTagEnabled(accData.Flags);
+
+          return accData.Account && isValidXRPAddress(accData.Account);
         } else {
           return false
         }
