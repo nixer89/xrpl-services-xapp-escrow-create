@@ -417,7 +417,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
                 //check if we are an EscrowReleaser payment
                 if(payloadRequest.payload.txjson.TransactionType.toLowerCase() == 'payment' && payloadRequest.payload.custom_meta && payloadRequest.payload.custom_meta.blob && !payloadRequest.options.signinToValidate)
                   transactionResult = await this.xummService.validateEscrowPayment(message.payload_uuidv4);
-                if(payloadRequest.options.signinToValidate)
+                else if(payloadRequest.options.signinToValidate)
                   transactionResult = await this.xummService.checkSignIn(message.payload_uuidv4);
                 else
                   transactionResult = await this.xummService.validateTransaction(message.payload_uuidv4);
@@ -457,7 +457,16 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
                     }
                   }
                 } else {
-                  this.snackBar.open(trxType+" not successfull!", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
+                  if(payloadRequest.payload.txjson.TransactionType.toLowerCase() === 'payment' && payloadRequest.payload.custom_meta && payloadRequest.payload.custom_meta.blob) {
+                    if(transactionResult && transactionResult.message)
+                      this.snackBar.open(transactionResult.message, null, {panelClass: 'snackbar-failed', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
+                    else
+                      this.snackBar.open("Auto Release NOT activated!", null, {panelClass: 'snackbar-failed', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
+
+                    this.autoReleaseActivated = false;
+                  } else {
+                    this.snackBar.open(trxType+" not successfull!", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
+                  }
                 }
             } else {
               this.snackBar.open(trxType+" not successfull!", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
@@ -685,7 +694,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
           },
           txjson: {
               TransactionType: "Payment",
-              Account: this.originalAccountInfo.Account,
+              Account: this.createdEscrow.Account,
               Memos : [{Memo: {MemoType: Buffer.from("[https://xumm.community]-Memo", 'utf8').toString('hex').toUpperCase(), MemoData: Buffer.from("Payment for Auto Release of Escrow! Owner:" + this.createdEscrow.Account + " Sequence: " + this.createdEscrow.Sequence, 'utf8').toString('hex').toUpperCase()}}]
           },
           custom_meta: {
