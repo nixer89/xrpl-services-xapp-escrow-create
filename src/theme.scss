@@ -265,10 +265,10 @@ $md-xummred: (
 
 
 .moonlight-theme {
-  $moonlight-primary: mat-palette($md-xummblue, 0.17);
+  $moonlight-primary: mat-palette($md-xummblue, 0.22);
   $moonlight-accent: mat-palette($md-xummorange, 0.17);
   $moonlight-warn: mat-palette($md-xummred, 0.17);
-  $moonlight-theme: mat-moon-theme($moonlight-primary, $moonlight-accent, $moonlight-warn);
+  $moonlight-theme: mat-light-theme($moonlight-primary, $moonlight-accent, $moonlight-warn);
 
   a {
     color: #FFB300;
@@ -341,7 +341,7 @@ $md-xummred: (
   $royal-primary: mat-palette($md-xummblue, 0.17);
   $royal-accent: mat-palette($md-xummorange, 0.17);
   $royal-warn: mat-palette($md-xummred, 0.17);
-  $royal-theme: mat-royal-theme($royal-primary, $royal-accent, $royal-warn);
+  $royal-theme: mat-dark-theme($royal-primary, $royal-accent, $royal-warn);
 
   a {
     color: #FFB300;
