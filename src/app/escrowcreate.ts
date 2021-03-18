@@ -394,7 +394,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
                 //check if we are an EscrowReleaser payment
                 if(payloadRequest.payload.txjson.TransactionType.toLowerCase() == 'payment' && payloadRequest.payload.custom_meta && payloadRequest.payload.custom_meta.blob && !payloadRequest.options.signinToValidate)
                   transactionResult = await this.xummService.validateEscrowPayment(message.payload_uuidv4);
-                if(payloadRequest.options.signinToValidate)
+                else if(payloadRequest.options.signinToValidate)
                   transactionResult = await this.xummService.checkSignIn(message.payload_uuidv4);
                 else
                   transactionResult = await this.xummService.validateTransaction(message.payload_uuidv4);
