@@ -14,6 +14,7 @@ import { DeviceDetectorService } from 'ngx-device-detector';
 import { OverlayContainer } from '@angular/cdk/overlay';
 import * as flagUtils from './utils/flagutils';
 import { FormControl } from '@angular/forms';
+import { DateAdapter } from '@angular/material/core';
 
 @Component({
   selector: 'escrowcreate',
@@ -26,6 +27,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
               private xrplWebSocket: XRPLWebsocket,
               private snackBar: MatSnackBar,
               private overlayContainer: OverlayContainer,
+              private dateAdapter: DateAdapter<any>,
               private device:DeviceDetectorService,
               private googleAnalytics: GoogleAnalyticsService) { }
 
@@ -105,6 +107,9 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
       if(ottData) {
 
         this.testMode = ottData.nodetype == 'TESTNET';
+
+        if(ottData.locale)
+          this.dateAdapter.setLocale(ottData.locale);
         //this.infoLabel = "changed mode to testnet: " + this.testMode;
 
         let themeClass = 'dark-theme';
