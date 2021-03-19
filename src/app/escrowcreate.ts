@@ -58,7 +58,8 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
   @Input()
   ottChanged: Observable<any>;
 
-  dateFormCtrl:FormControl = new FormControl(new Date());
+  finishAfterFormCtrl:FormControl = new FormControl();
+  cancelAfterFormCtrl:FormControl = new FormControl();
 
   websocket: WebSocketSubject<any>;
 
@@ -174,8 +175,10 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
     //console.log("destinationInput: " + this.destinationInput);
     
     if(this.dateTimePickerSupported) {
-      if(this.cancelafterDateInput && this.cancelafterTimeInput)
-        this.cancelAfterDateTime = new Date(this.cancelafterDateInput.trim() + " " + this.cancelafterTimeInput.trim())
+      if(this.cancelAfterFormCtrl && this.cancelAfterFormCtrl.value && this.cancelafterTimeInput) {
+        let datePicker = new Date(this.cancelAfterFormCtrl.value);
+        this.finishAfterDateTime = new Date(datePicker.getFullYear() + "-" + ((datePicker.getMonth()+1) < 10 ? "0":"")+(datePicker.getMonth()+1) + "-" + datePicker.getDate() + "T" + this.cancelafterTimeInput.trim());    
+      }
       else
         this.cancelAfterDateTime = null;
     } else {
@@ -192,9 +195,8 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
     this.validCancelAfter = this.cancelAfterDateTime != null && this.cancelAfterDateTime.getTime() > 0;
 
     if(this.dateTimePickerSupported) {
-      if(this.dateFormCtrl && this.dateFormCtrl.value && this.finishafterTimeInput) {
-        let datePicker = new Date(this.dateFormCtrl.value);
-        this.infoLabel = datePicker.getFullYear() + "-" + ((datePicker.getMonth()+1) < 10 ? "0":"")+(datePicker.getMonth()+1) + "-" + datePicker.getDate() + "T" + this.finishafterTimeInput.trim();
+      if(this.finishAfterFormCtrl && this.finishAfterFormCtrl.value && this.finishafterTimeInput) {
+        let datePicker = new Date(this.finishAfterFormCtrl.value);
         this.finishAfterDateTime = new Date(datePicker.getFullYear() + "-" + ((datePicker.getMonth()+1) < 10 ? "0":"")+(datePicker.getMonth()+1) + "-" + datePicker.getDate() + "T" + this.finishafterTimeInput.trim());    
       }
       else
