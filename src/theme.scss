@@ -265,7 +265,7 @@ $md-xummred: (
 
 
 .moonlight-theme {
-  $moonlight-primary: mat-palette($md-xummblue, 0.22);
+  $moonlight-primary: mat-palette($md-xummblue, 0.17);
   $moonlight-accent: mat-palette($md-xummorange, 0.17);
   $moonlight-warn: mat-palette($md-xummred, 0.17);
   $moonlight-theme: mat-light-theme($moonlight-primary, $moonlight-accent, $moonlight-warn);
