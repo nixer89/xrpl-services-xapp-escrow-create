@@ -135,12 +135,12 @@
             <form fxLayout="column" fxLayoutGap="0.5em" style="padding-top: 1em;">
               <mat-form-field>
                 <mat-label>Choose a date</mat-label>
-                <input matInput name="cancelafterdate" [matDatepicker]="picker" [formControl]="cancelAfterFormCtrl" (dateChange)="checkChanges()">
-                <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-                <mat-datepicker #picker></mat-datepicker>
+                <input matInput name="cancelafterdate" [matDatepicker]="picker2" [formControl]="cancelAfterFormCtrl" (dateChange)="checkChanges()">
+                <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+                <mat-datepicker #picker2></mat-datepicker>
               </mat-form-field>
               <mat-form-field>
-                <input matInput name="cancelaftertime" [type]="dateTimePickerSupported ? 'time' : 'text'" step="2" [placeholder]="dateTimePickerSupported ? 'Choose a Time' : 'HH:mm:ss (24h format)'" [(ngModel)]="cancelafterTimeInput" (ngModelChange)="checkChanges()">
+                <input matInput name="cancelaftertime" step="2" placeholder="HH:mm:ss (24h format)" [(ngModel)]="cancelafterTimeInput" (ngModelChange)="checkChanges()">
               </mat-form-field>
               <mat-hint *ngIf="(cancelafterTimeInput || cancelafterDateInput) && !validCancelAfter">Invalid date/time.</mat-hint>
               <mat-hint *ngIf="validCancelAfter && cancelDateInFuture">Cancel After needs to be in the future.</mat-hint>
