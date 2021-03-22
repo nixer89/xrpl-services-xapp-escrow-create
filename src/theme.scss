@@ -191,21 +191,26 @@ $md-xummred: (
 
 // Our dark theme
 .dark-theme {
-  $dark-primary: mat-palette($md-xummblue, 0.22);
-  $dark-accent: mat-palette($md-xummorange, 0.22);
-  $dark-warn: mat-palette($md-xummred, 0.22);  
+  $dark-primary: mat-palette($md-xummblue);
+  $dark-accent: mat-palette($md-xummorange);
+  $dark-warn: mat-palette($md-xummred);  
   $dark-theme: mat-dark-theme($dark-primary, $dark-accent, $dark-warn);
 
+  .body {
+    color: #FFFFFF;
+    opacity: 1;
+  }
+
   a {
-    color: #FFB300;
+    color: rgb(248, 191, 76);
   }
 
   a:hover {
-    color: #FFA000;
+    color: rgb(248, 191, 76);
   }
 
   a:active {
-    color: #FF8F00;
+    color: rgb(248, 191, 76);
   }
 
   .mat-form-field.mat-focused .mat-form-field-label {
@@ -213,11 +218,19 @@ $md-xummred: (
   }
 
   .warning {
-    color: #FF6B6B;
+    color: rgb(255, 91, 91)
+  }
+
+  .warning-ligth {
+    color: rgba(255, 91, 91, 0.22)
   }
 
   .loading {
-    color: #FFB300;
+    color: rgb(248, 191, 76)
+  }
+
+  .loading-light {
+    color: rgb(248, 191, 76, 0.22)
   }
 
   .success {
@@ -225,50 +238,49 @@ $md-xummred: (
   }
 
   .mat-card {
-    background-color:#606885 !important;
-    opacity: 0.25 !important;
+    background-color:rgba(96, 104, 133, 0.25) !important;
   }
 
   .mat-expansion-panel {
-    background-color:#606885 !important;
-    opacity: 0.25 !important;
+    background-color:rgba(96, 104, 133, 0.25) !important;
   }
 
   .mat-expansion-panel.expansion-panel-light {
-    background-color:#606885 !important;
-    opacity: 0.25 !important;
+    background-color:rgba(96, 104, 133, 0.25) !important;
   }
 
   .mat-expansion-panel-header.expansion-panel-light {
-    background-color:#606885 !important;
-    opacity: 0.25 !important;
+    background-color:rgba(96, 104, 133, 0.25) !important;
   }
 
   .mat-expansion-panel.expansion-panel-darker {
-    background-color:#606885 !important;
-    opacity: 0.25 !important;
+    background-color:rgba(96, 104, 133, 0.25) !important;
   }
 
   .mat-expansion-panel-header.expansion-panel-darker {
-    background-color:#606885 !important;
-    opacity: 0.25 !important;
+    background-color:rgba(96, 104, 133, 0.25) !important;
   }
 
   .theme-background {
-    background-color:#606885 !important;
-    opacity: 0.25 !important;
+    background-color:#000000 !important;
+    color: #FFFFFF;
   }
 
   .snackbar-success {
-    background-color: #303030 !important;
+    background-color: rgba(96, 104, 133, 0.25) !important;
   }
 
   .snackbar-failed {
-    background-color: #303030 !important;
+    background-color: rgba(96, 104, 133, 0.25) !important;
   }
 
   .mat-option.mat-selected:not(.mat-option-disabled) {
     color: #FF8F00 !important
+  }
+
+  .blue-button {
+    background-color: rgba(48, 82, 255, 0.22) !important;
+    color: rgb(48, 82, 255) !important;
   }
 
   @include angular-material-theme($dark-theme);

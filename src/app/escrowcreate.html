@@ -1,18 +1,18 @@
 <!--label *ngIf="infoLabel">{{infoLabel}}</label-->
 <!--label *ngIf="infoLabel2">{{infoLabel2}}</label-->
-<mat-vertical-stepper linear #escrowStepper>
+<mat-vertical-stepper linear #escrowStepper class="theme-background">
 
-  <mat-step completed="false" editable="false">
+  <mat-step completed="false" editable="false" fxLayout="column" fxLayoutGap="0.5em">
     <mat-card fxLayout="column" fxLayoutGap="0.5em">
         <ng-template matStepLabel>Description</ng-template>
         <a href="https://xrpl.org/escrowcreate.html" rel="noreferrer">Escrow Create Documentation</a><br/>
         <label>Sequester XRP until the escrow process either finishes or is canceled.</label>
         <label>Every Escrow will add 5 XRP to your account reserve. The 5 XRP are back available when the Escorw is finished/canceled.</label>
-        <label style="color: crimson;padding-top: 1em;"><b>Be careful. You could lock away your funds for years!</b><br/></label>
-        <div style="padding-top: 0.5em;">
-            <button mat-raised-button color="primary" (click)="moveNext()">Next</button>
-        </div>
+        <label class="warning" style="padding-top: 1em;">Be careful. You could lock away your funds for years!<br/></label>
     </mat-card>
+    <div style="padding-top: 0.5em;">
+      <button mat-raised-button class="blue-button" (click)="moveNext()">Next</button>
+    </div>
   </mat-step>
 
   <mat-step completed="false" editable="false">
