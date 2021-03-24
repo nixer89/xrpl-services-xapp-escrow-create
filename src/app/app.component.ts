@@ -28,6 +28,7 @@ export class AppComponent implements OnInit {
 
   ngOnInit() {
     this.route.queryParams.subscribe(async params => {
+      this.infoLabel = JSON.stringify(params);
       if(this.timeout1) {
         //console.log("clearing timeout1");
         clearTimeout(this.timeout1)

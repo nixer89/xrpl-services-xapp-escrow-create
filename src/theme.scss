@@ -134,58 +134,126 @@ $md-xummred: (
     )
 );
 
+a {
+  color: rgb(248, 191, 76);
+}
+
+a:hover {
+  color: rgb(248, 191, 76);
+}
+
+a:active {
+  color: rgb(248, 191, 76);
+}
+
+.mat-form-field.mat-focused .mat-form-field-label {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.loading {
+  color: rgb(248, 191, 76)
+}
+
+.secondary {
+  color: rgb(172, 177, 193)
+}
+
+.mat-step-icon.mat-step-icon-state-done {
+  background-color: rgb(59, 220, 150) !important;
+}
 
 
+.mat-step-icon.mat-step-icon-state-number.mat-step-icon-selected {
+  background-color: rgb(48, 82, 255) !important;
+}
+
+.mat-step-icon.mat-step-icon-state-number {
+  background-color:  rgb(96, 104, 133) !important;
+}
+
+.mat-stepper-vertical-line::before {
+  background-color: rgb(96, 104, 133) !important;
+}
+
+.mat-step-label.mat-step-label-active {
+  color: rgb(255, 255, 255) !important;
+}
+
+.mat-step-label {
+  color: rgb(172, 177, 193) !important;
+}
+
+// Our dark theme
 .light-theme {
-  $light-primary: mat-palette($md-xummblue, 0.06);
-  $light-accent: mat-palette($md-xummorange, 0.06);
-  $light-warn: mat-palette($md-xummred, 0.06);
+  $light-primary: mat-palette($md-xummblue);
+  $light-accent: mat-palette($md-xummorange);
+  $light-warn: mat-palette($md-xummred);  
   $light-theme: mat-light-theme($light-primary, $light-accent, $light-warn);
 
+  .body {
+    color: #000000;
+    opacity: 1;
+  }
+
+  .mat-card {
+    background-color:rgb(248, 250, 253) !important;
+  }
+
   .mat-expansion-panel {
-    background-color: rgba(238,238,238, 0.5) !important;
+    background-color:rgb(248, 250, 253) !important;
   }
 
   .mat-expansion-panel.expansion-panel-light {
-    background-color: #C0C0C0 !important;
+    background-color:rgb(248, 250, 253) !important;
   }
 
-  .mat-expansion-panel-header.expantion-panel-light {
-    background-color: #C0C0C0 !important;
+  .mat-expansion-panel-header.expansion-panel-light {
+    background-color:rgb(248, 250, 253) !important;
   }
 
   .mat-expansion-panel.expansion-panel-darker {
-    background-color: #A0A0A0 !important;
+    background-color:rgb(248, 250, 253) !important;
   }
 
   .mat-expansion-panel-header.expansion-panel-darker {
-    background-color: #A0A0A0 !important;
-  }
-
-  .warning {
-    color: #EB0000;
-  }
-
-  .loading {
-    color: blue;
-  }
-
-  .success {
-    color: green
+    background-color:rgb(248, 250, 253) !important;
   }
 
   .theme-background {
-    background-color: rgba(238,238,238, 0.5) !important;
+    background-color:#000000 !important;
+    color: #FFFFFF;
   }
 
   .snackbar-success {
-    background-color: white !important;
+    background-color:rgb(243,253,249) !important;
+    color: rgb(59, 220, 150) !important;
   }
 
   .snackbar-failed {
-    background-color: white !important;
+    background-color:rgb(255,245,245) !important;
+    color: rgb(255, 91, 91) !important;
   }
 
+  .mat-card.mat-card-red {
+    background-color: rgba(255, 91, 91, 0.06) !important;
+    color: rgb(255, 91, 91) !important;
+  }
+
+  .mat-card.mat-card-orange {
+    background-color: rgba(248, 191, 76, 0.06) !important;
+    color: rgb(248, 191, 76) !important;
+  }
+
+  .mat-card.mat-card-green {
+    background-color: rgba(59, 220, 150, 0.06) !important;
+    color: rgb(59, 220, 150) !important;
+  }
+
+  .mat-card.mat-card-blue {
+    background-color: rgba(48, 82, 255, 0.06) !important;
+    color: rgb(48, 82, 255) !important;
+  }
+  
   @include angular-material-theme($light-theme);
 }
 
@@ -199,42 +267,6 @@ $md-xummred: (
   .body {
     color: #FFFFFF;
     opacity: 1;
-  }
-
-  a {
-    color: rgb(248, 191, 76);
-  }
-
-  a:hover {
-    color: rgb(248, 191, 76);
-  }
-
-  a:active {
-    color: rgb(248, 191, 76);
-  }
-
-  .mat-form-field.mat-focused .mat-form-field-label {
-    color: rgba(255, 255, 255, 0.7) !important;
-  }
-
-  .warning {
-    color: rgb(255, 91, 91)
-  }
-
-  .warning-ligth {
-    color: rgba(255, 91, 91, 0.22)
-  }
-
-  .loading {
-    color: rgb(248, 191, 76)
-  }
-
-  .loading-light {
-    color: rgb(248, 191, 76, 0.22)
-  }
-
-  .success {
-    color: #00B300
   }
 
   .mat-card {
@@ -267,168 +299,182 @@ $md-xummred: (
   }
 
   .snackbar-success {
-    background-color: rgba(96, 104, 133, 0.25) !important;
+    background-color:rgb(13,48,33) !important;
+    color: rgb(59, 220, 150) !important;
   }
 
   .snackbar-failed {
-    background-color: rgba(96, 104, 133, 0.25) !important;
+    background-color:rgb(56,20,20) !important;
+    color: rgb(255, 91, 91) !important;
   }
 
-  .mat-option.mat-selected:not(.mat-option-disabled) {
-    color: #FF8F00 !important
+  .mat-card.mat-card-red {
+    background-color: rgba(255, 91, 91, 0.22) !important;
+    color: rgb(255, 91, 91) !important;
   }
 
-  .blue-button {
+  .mat-card.mat-card-orange {
+    background-color: rgba(248, 191, 76, 0.22) !important;
+    color: rgb(248, 191, 76) !important;
+  }
+
+  .mat-card.mat-card-green {
+    background-color: rgba(59, 220, 150, 0.22) !important;
+    color: rgb(59, 220, 150) !important;
+  }
+
+  .mat-card.mat-card-blue {
     background-color: rgba(48, 82, 255, 0.22) !important;
     color: rgb(48, 82, 255) !important;
   }
-
+  
   @include angular-material-theme($dark-theme);
 }
 
-
+// Our monlight
 .moonlight-theme {
-  $moonlight-primary: mat-palette($md-xummblue, 0.17);
-  $moonlight-accent: mat-palette($md-xummorange, 0.17);
-  $moonlight-warn: mat-palette($md-xummred, 0.17);
-  $moonlight-theme: mat-light-theme($moonlight-primary, $moonlight-accent, $moonlight-warn);
+  $moonlight-primary: mat-palette($md-xummblue);
+  $moonlight-accent: mat-palette($md-xummorange);
+  $moonlight-warn: mat-palette($md-xummred);  
+  $moonlight-theme: mat-dark-theme($moonlight-primary, $moonlight-accent, $moonlight-warn);
 
-  a {
-    color: #FFB300;
+  .body {
+    color: #FFFFFF;
+    opacity: 1;
   }
 
-  a:hover {
-    color: #FFA000;
-  }
-
-  a:active {
-    color: #FF8F00;
-  }
-
-  .mat-form-field.mat-focused .mat-form-field-label {
-    color: rgba(255, 255, 255, 0.7) !important;
-  }
-
-  .warning {
-    color: #FF6B6B;
-  }
-
-  .loading {
-    color: #FFB300;
-  }
-
-  .success {
-    color: #00B300
+  .mat-card {
+    background-color:rgba(96, 104, 133, 0.19) !important;
   }
 
   .mat-expansion-panel {
-    background-color: #181A21 !important;
+    background-color:rgba(96, 104, 133, 0.19) !important;
   }
 
   .mat-expansion-panel.expansion-panel-light {
-    background-color: #303030 !important;
+    background-color:rgba(96, 104, 133, 0.19) !important;
   }
 
   .mat-expansion-panel-header.expansion-panel-light {
-    background-color: #303030 !important;
+    background-color:rgba(96, 104, 133, 0.19) !important;
   }
 
   .mat-expansion-panel.expansion-panel-darker {
-    background-color: #202020 !important;
+    background-color:rgba(96, 104, 133, 0.19) !important;
   }
 
   .mat-expansion-panel-header.expansion-panel-darker {
-    background-color: #202020 !important;
+    background-color:rgba(96, 104, 133, 0.19) !important;
   }
 
   .theme-background {
-    background-color:#181A21 !important;
+    background-color:rgb(24, 26, 33) !important;
+    color: #FFFFFF;
   }
 
   .snackbar-success {
-    background-color: #303030 !important;
+    background-color:rgb(30,59,53) !important;
+    color: rgb(59, 220, 150) !important;
   }
 
   .snackbar-failed {
-    background-color: #303030 !important;
+    background-color:rgb(63,37,43) !important;
+    color: rgb(255, 91, 91) !important;
   }
 
-  .mat-option.mat-selected:not(.mat-option-disabled) {
-    color: #FF8F00 !important
+  .mat-card.mat-card-red {
+    background-color: rgba(255, 91, 91, 0.17) !important;
+    color: rgb(255, 91, 91) !important;
   }
 
+  .mat-card.mat-card-orange {
+    background-color: rgba(248, 191, 76, 0.17) !important;
+    color: rgb(248, 191, 76) !important;
+  }
+
+  .mat-card.mat-card-green {
+    background-color: rgba(59, 220, 150, 0.17) !important;
+    color: rgb(59, 220, 150) !important;
+  }
+
+  .mat-card.mat-card-blue {
+    background-color: rgba(48, 82, 255, 0.17) !important;
+    color: rgb(48, 82, 255) !important;
+  }
+  
   @include angular-material-theme($moonlight-theme);
 }
 
+// Our royal
 .royal-theme {
-  $royal-primary: mat-palette($md-xummblue, 0.17);
-  $royal-accent: mat-palette($md-xummorange, 0.17);
-  $royal-warn: mat-palette($md-xummred, 0.17);
+  $royal-primary: mat-palette($md-xummblue);
+  $royal-accent: mat-palette($md-xummorange);
+  $royal-warn: mat-palette($md-xummred);  
   $royal-theme: mat-dark-theme($royal-primary, $royal-accent, $royal-warn);
 
-  a {
-    color: #FFB300;
+  .body {
+    color: #FFFFFF;
+    opacity: 1;
   }
 
-  a:hover {
-    color: #FFA000;
-  }
-
-  a:active {
-    color: #FF8F00;
-  }
-
-  .mat-form-field.mat-focused .mat-form-field-label {
-    color: rgba(255, 255, 255, 0.7) !important;
-  } 
-
-  .warning {
-    color: #FF6B6B;
-  }
-
-  .loading {
-    color: #FFB300;
-  }
-
-  .success {
-    color: #00B300
+  .mat-card {
+    background-color:rgba(96, 104, 133, 0.22) !important;
   }
 
   .mat-expansion-panel {
-    background-color: rgba(50, 50, 50, 0.5) !important;
+    background-color:rgba(96, 104, 133, 0.22) !important;
   }
 
   .mat-expansion-panel.expansion-panel-light {
-    background-color: #303030 !important;
+    background-color:rgba(96, 104, 133, 0.22) !important;
   }
 
   .mat-expansion-panel-header.expansion-panel-light {
-    background-color: #303030 !important;
+    background-color:rgba(96, 104, 133, 0.22) !important;
   }
 
   .mat-expansion-panel.expansion-panel-darker {
-    background-color: #202020 !important;
+    background-color:rgba(96, 104, 133, 0.22) !important;
   }
 
   .mat-expansion-panel-header.expansion-panel-darker {
-    background-color: #202020 !important;
+    background-color:rgba(96, 104, 133, 0.22) !important;
   }
 
   .theme-background {
-    background-color:rgba(50, 50, 50, 0.5) !important;
+    background-color:rgb(3, 11, 54) !important;
+    color: #FFFFFF;
   }
 
   .snackbar-success {
-    background-color: #303030 !important;
+    background-color:rgb(30,59,53) !important;
+    color: rgb(59, 220, 150) !important;
   }
 
   .snackbar-failed {
-    background-color: #303030 !important;
+    background-color:rgb(63,37,43) !important;
+    color: rgb(255, 91, 91) !important;
   }
 
-  .mat-option.mat-selected:not(.mat-option-disabled) {
-    color: #FF8F00 !important
+  .mat-card.mat-card-red {
+    background-color: rgba(255, 91, 91, 0.17) !important;
+    color: rgb(255, 91, 91) !important;
   }
 
+  .mat-card.mat-card-orange {
+    background-color: rgba(248, 191, 76, 0.17) !important;
+    color: rgb(248, 191, 76) !important;
+  }
+
+  .mat-card.mat-card-green {
+    background-color: rgba(59, 220, 150, 0.17) !important;
+    color: rgb(59, 220, 150) !important;
+  }
+
+  .mat-card.mat-card-blue {
+    background-color: rgba(48, 82, 255, 0.17) !important;
+    color: rgb(48, 82, 255) !important;
+  }
+  
   @include angular-material-theme($royal-theme);
 }

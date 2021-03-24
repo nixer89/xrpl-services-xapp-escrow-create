@@ -1,5 +1,5 @@
 <div [class]="themeClass">
-  <!--label *ngIf="infoLabel">AppComponent: {{infoLabel}}</label-->
+  <label *ngIf="infoLabel" style="color: red">AppComponent: {{infoLabel}}</label>
   <escrowcreate [ottChanged]="ottReceived.asObservable()"></escrowcreate>
   <app-footer></app-footer>
 </div>

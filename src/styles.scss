@@ -8,17 +8,11 @@ html, body {
 
 body {
     margin: 0;
-    font-family: Roboto, "Helvetica Neue", sans-serif;
     background-color: var(--background-color);
 }
 
 a.footerlink {
     margin-right: 1em;
-}
-
-.mat-toolbar.second-toolbar {
-    background-color: rgb(27, 79, 184) !important;
-    height: 36px;
 }
 
 .floatcenter {
@@ -62,13 +56,13 @@ a.footerlink {
 }
 
 body .snackbar-success {
-    color: green !important;
+    color: rgb(59, 220, 150) !important;
     display: flex;
     justify-content: center;
 }
   
 body .snackbar-failed {
-    color: #EB0000 !important;
+    color: rgb(255, 91, 91) !important;
     display: flex;
     justify-content: center;
 }
@@ -80,12 +74,12 @@ body .snackbar-failed {
 .changed {
     transition: color 0s ease-in, text-shadow 0s ease-in, background-color 1.1s linear 0s;
     text-shadow: #bbb 2px 2px 2px;
-    color: red;
+    color: rgb(255, 91, 91);
     font-weight: 600;
 }
 
 .mat-hint {
-    color: #f44336 !important;
+    color: rgb(255, 91, 91) !important;
 }
 
 // adds breaks to the mat-checkboxes with long labels

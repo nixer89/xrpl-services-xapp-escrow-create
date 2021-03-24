@@ -24,14 +24,19 @@
     }
 
     ::ng-deep .mat-step-header {
-        padding: 10px !important;
+        padding: 10px 10px 10px 9px !important;
     }
 
     ::ng-deep .mat-vertical-content-container {
-        margin-left: 20px !important;
+        margin-left: 21px !important;
     }
 
     ::ng-deep .mat-vertical-content {
-        padding: 0 12px 12px 12px !important;
+        padding: 0 10px 10px 10px !important;
+    }
+
+    ::ng-deep .mat-stepper-vertical-line::before {
+        margin-top: 10px;
+        margin-bottom: 10px;
     }
 }
