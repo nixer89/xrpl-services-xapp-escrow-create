@@ -20,6 +20,7 @@ export class AppComponent implements OnInit {
   infoLabel:string = null;
 
   ottReceived: Subject<any> = new Subject<any>();
+  appStyleChanged: Subject<any> = new Subject<any>();
 
   timeout1: any;
   timeout2: any;
@@ -81,6 +82,8 @@ export class AppComponent implements OnInit {
       this.overlayContainer.getContainerElement().classList.remove('moonlight-theme');
       this.overlayContainer.getContainerElement().classList.remove('royal-theme');
       this.overlayContainer.getContainerElement().classList.add(this.themeClass);
+
+      this.appStyleChanged.next({theme: this.themeClass, color: this.backgroundColor});
 
       if(xAppToken) {
         let ottResponse:any = await this.xummService.getxAppOTTData(xAppToken);

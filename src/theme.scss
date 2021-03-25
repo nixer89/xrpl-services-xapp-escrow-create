@@ -147,7 +147,7 @@ a:active {
 }
 
 .mat-form-field.mat-focused .mat-form-field-label {
-  color: rgba(255, 255, 255, 0.7) !important;
+  color: rgb(96, 104, 133) !important;
 }
 
 .loading {
@@ -156,6 +156,10 @@ a:active {
 
 .secondary {
   color: rgb(172, 177, 193)
+}
+
+.xumm-grey {
+  color: rgb(96, 104, 133) !important;
 }
 
 .mat-step-icon.mat-step-icon-state-done {
@@ -183,6 +187,18 @@ a:active {
   color: rgb(172, 177, 193) !important;
 }
 
+.mat-raised-button {
+  font-weight: bold !important;
+}
+
+.mat-raised-button.mat-button-disabled.mat-button-disabled {
+  background-color: rgba(255, 255, 255, 0.12) !important
+}
+
+.mat-raised-button.xumm-grey {
+  background-color: rgb(96, 104, 133) !important;
+}
+
 // Our dark theme
 .light-theme {
   $light-primary: mat-palette($md-xummblue);
@@ -193,6 +209,18 @@ a:active {
   .body {
     color: #000000;
     opacity: 1;
+  }
+
+  a {
+    color: rgb(48, 82, 255);
+  }
+  
+  a:hover {
+    color: rgb(48, 82, 255);
+  }
+  
+  a:active {
+    color: rgb(48, 82, 255);
   }
 
   .mat-card {
@@ -220,8 +248,8 @@ a:active {
   }
 
   .theme-background {
-    background-color:#000000 !important;
-    color: #FFFFFF;
+    background-color:#FFFFFF !important;
+    color: #000000;
   }
 
   .snackbar-success {
@@ -252,6 +280,18 @@ a:active {
   .mat-card.mat-card-blue {
     background-color: rgba(48, 82, 255, 0.06) !important;
     color: rgb(48, 82, 255) !important;
+  }
+
+  .mat-step-label.mat-step-label-active {
+    color: rgb(0, 0, 0) !important;
+  }
+
+  .mat-raised-button.mat-button-disabled.mat-button-disabled {
+    background-color: rgba(0, 0, 0, 0.1) !important
+  }
+
+  .mat-raised-button.xumm-grey {
+    background-color: rgba(96, 104, 133, 0.1) !important;
   }
   
   @include angular-material-theme($light-theme);

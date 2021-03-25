@@ -58,6 +58,9 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
   @Input()
   ottChanged: Observable<any>;
 
+  @Input()
+  themeChanged: Observable<any>;
+
   finishAfterFormCtrl:FormControl = new FormControl();
   cancelAfterFormCtrl:FormControl = new FormControl();
 
@@ -67,6 +70,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
   testMode:boolean = false;
 
   private ottReceived: Subscription;
+  private themeReceived: Subscription;
 
   isValidEscrow:boolean = false;
   validAmount:boolean = false;
@@ -103,6 +107,9 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
 
   oldDestinationInput:string = null;
 
+  themeClass = 'dark-theme';
+  backgroundColor = '#000000';
+
   ngOnInit() {
     this.ottReceived = this.ottChanged.subscribe(async ottData => {
       //console.log("ottReceived: " + JSON.stringify(ottData));
@@ -116,42 +123,6 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
         if(ottData.locale)
           this.dateAdapter.setLocale(ottData.locale);
         //this.infoLabel = "changed mode to testnet: " + this.testMode;
-
-        let themeClass = 'dark-theme';
-        let backgroundColor = '#000000';
-
-        if(ottData.style) {
-          switch(ottData.style) {
-            case 'LIGHT':
-              themeClass = 'light-theme';
-              backgroundColor = '#FFFFFF';
-              break;
-            case 'DARK':
-              themeClass = 'dark-theme';
-              backgroundColor = '#000000';
-              break;
-            case 'MOONLIGHT':
-              themeClass = 'moonlight-theme';
-              backgroundColor = '#181A21';
-              break;
-            case 'ROYAL':
-              themeClass = 'royal-theme';
-              backgroundColor = '#030B36';
-              break;
-            default:
-              themeClass = 'dark-theme';
-              backgroundColor = '#000000';
-              break;
-          }
-        }
-
-        var bodyStyles = document.body.style;
-        bodyStyles.setProperty('--background-color', backgroundColor);
-        this.overlayContainer.getContainerElement().classList.remove('dark-theme');
-        this.overlayContainer.getContainerElement().classList.remove('light-theme');
-        this.overlayContainer.getContainerElement().classList.remove('moonlight-theme');
-        this.overlayContainer.getContainerElement().classList.remove('royal-theme');
-        this.overlayContainer.getContainerElement().classList.add(themeClass);
 
         if(ottData && ottData.account && ottData.accountaccess == 'FULL') {
 
@@ -169,6 +140,20 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
       //await this.loadAccountData("r9N4v3cWxfh4x6yUNjxNy3DbWUgbzMBLdk");
       //this.loadingData = false;
     });
+
+    this.themeReceived = this.themeChanged.subscribe(async appStyle => {
+
+      this.themeClass = appStyle.theme;
+      this.backgroundColor = appStyle.color;
+
+      var bodyStyles = document.body.style;
+      bodyStyles.setProperty('--background-color', this.backgroundColor);
+      this.overlayContainer.getContainerElement().classList.remove('dark-theme');
+      this.overlayContainer.getContainerElement().classList.remove('light-theme');
+      this.overlayContainer.getContainerElement().classList.remove('moonlight-theme');
+      this.overlayContainer.getContainerElement().classList.remove('royal-theme');
+      this.overlayContainer.getContainerElement().classList.add(this.themeClass);
+    });
     //this.infoLabel = JSON.stringify(this.device.getDeviceInfo());
 
     //this.dateTimePickerSupported = !(this.device && this.device.getDeviceInfo() && this.device.getDeviceInfo().os_version && (this.device.getDeviceInfo().os_version.toLowerCase().includes('ios') || this.device.getDeviceInfo().browser.toLowerCase().includes('safari') || this.device.getDeviceInfo().browser.toLowerCase().includes('edge')));
@@ -178,6 +163,9 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     if(this.ottReceived)
       this.ottReceived.unsubscribe();
+
+    if(this.themeReceived)
+      this.themeReceived.unsubscribe();
   }
 
   async checkChanges(insertedDestinationAccount?: boolean, userHasSignedInDestination?: boolean) {

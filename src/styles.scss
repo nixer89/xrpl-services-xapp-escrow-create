@@ -25,22 +25,6 @@ a.footerlink {
     vertical-align: middle;
 }
 
-.floatleft {
-    float: left;
-}
-  
-.floatright {
-    float: right;
-}
-
-.mat-button.sign-in-button {
-    width: 230;
-    min-width: 230px;
-    height: 40px;
-    padding-left: 0px;
-    padding-right: 0px;
-}
-
 .mat-expansion-panel-header-title {
     width: 20%;
     align-items: center;
@@ -56,13 +40,11 @@ a.footerlink {
 }
 
 body .snackbar-success {
-    color: rgb(59, 220, 150) !important;
     display: flex;
     justify-content: center;
 }
   
 body .snackbar-failed {
-    color: rgb(255, 91, 91) !important;
     display: flex;
     justify-content: center;
 }
