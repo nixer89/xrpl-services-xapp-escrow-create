@@ -52,7 +52,7 @@
 
           <div style="padding-top: 0.5em;" fxLayoutGap="0.5em">
               <button mat-raised-button color="primary" (click)="moveNext()" [disabled]="!originalAccountInfo || !originalAccountInfo.Account || loadingData || getAvailableBalanceForEscrow() <= 0">Next</button>
-              <button mat-raised-button class="xumm-grey" (click)="moveBack()" [disabled]="!originalAccountInfo || loadingData">Back</button>
+              <button mat-raised-button class="xumm-grey-background" (click)="moveBack()" [disabled]="!originalAccountInfo || loadingData">Back</button>
           </div>
       </mat-card>
     </mat-step>
@@ -99,7 +99,7 @@
 
           <div style="padding-top: 0.5em;" fxLayoutGap="0.5em">
               <button mat-raised-button color="primary" (click)="moveNext()" [disabled]="!validAddress || loadingData || escrowDestinationHasDestTagEnabled">Next</button>
-              <button mat-raised-button class="xumm-grey" (click)="moveBack()" [disabled]="loadingData">Back</button>
+              <button mat-raised-button class="xumm-grey-background" (click)="moveBack()" [disabled]="loadingData">Back</button>
           </div>
       </mat-card>
     </mat-step>
@@ -131,7 +131,7 @@
 
           <div style="padding-top: 0.5em;" fxLayoutGap="0.5em">
               <button mat-raised-button color="primary" (click)="moveNext()" [disabled]="!validAmount || loadingData">Next</button>
-              <button mat-raised-button class="xumm-grey" (click)="moveBack()" [disabled]="loadingData">Back</button>
+              <button mat-raised-button class="xumm-grey-background" (click)="moveBack()" [disabled]="loadingData">Back</button>
           </div>
       </mat-card>
     </mat-step>
@@ -212,7 +212,7 @@
 
           <div style="padding-top: 1em;" fxLayoutGap="0.5em">
               <button mat-raised-button color="primary" (click)="sendPayloadToXumm()" [disabled]="!isValidEscrow || loadingData">Create Escrow</button>
-              <button mat-raised-button class="xumm-grey" (click)="moveBack()" [disabled]="loadingData">Back</button>
+              <button mat-raised-button class="xumm-grey-background" (click)="moveBack()" [disabled]="loadingData">Back</button>
           </div>
       </mat-card>
     </mat-step>
@@ -257,7 +257,7 @@
           </mat-card>
 
           <div style="padding-top: 1em;" fxLayoutGap="0.5em" fxLayoutAlign="center center">
-              <button mat-raised-button class="xumm-grey" (click)="close()" [disabled]="loadingData">Close</button>
+              <button mat-raised-button class="xumm-grey-background" (click)="close()" [disabled]="loadingData">Close</button>
           </div>
       </mat-card>
     </mat-step>
