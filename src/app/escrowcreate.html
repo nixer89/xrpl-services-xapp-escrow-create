@@ -156,7 +156,7 @@
             <button mat-icon-button color ="warn" (click)="resetFinishAfter()">
               <mat-icon>highlight_off</mat-icon>
             </button>
-            <mat-hint *ngIf="finishafterTimeInput && finishAfterFormCtrl && !validFinishAfter && !finishDateInFuture">Invalid date/time.</mat-hint>
+            <mat-hint *ngIf="finishAfterFormCtrl && finishafterTimeInput && !validFinishAfter && !finishDateInFuture">Invalid date/time.</mat-hint>
             <mat-hint *ngIf="finishDateInFuture">Finish After needs to be in the future.</mat-hint>
             <mat-hint *ngIf="isFinishAfterDateSet() && !finishafterTimeInput">You have set a date. Please also set a time!</mat-hint>
             <mat-hint *ngIf="validFinishAfter && !finishDateInFuture" style="color: grey !important">UTC time: <b>{{finishAfterDateTime.toUTCString()}}</b></mat-hint>
@@ -191,7 +191,7 @@
                 <button mat-icon-button color="warn" (click)="resetCancelAfter()">
                   <mat-icon>highlight_off</mat-icon>
                 </button>
-                <mat-hint *ngIf="(cancelAfterFormCtrl && cancelafterTimeInput && !validCancelAfter">Invalid date/time.</mat-hint>
+                <mat-hint *ngIf="cancelAfterFormCtrl && cancelafterTimeInput && !validCancelAfter">Invalid date/time.</mat-hint>
                 <mat-hint *ngIf="validCancelAfter && cancelDateInFuture">Cancel After needs to be in the future.</mat-hint>
                 <mat-hint *ngIf="isCancelAfterDateSet() && !cancelafterTimeInput">You have set a date. Please also set a time!</mat-hint>
                 <mat-hint *ngIf="validCancelAfter && !cancelDateInFuture && cancelDateBeforeFinishDate">Cancel After needs to be after Finish After.</mat-hint>
