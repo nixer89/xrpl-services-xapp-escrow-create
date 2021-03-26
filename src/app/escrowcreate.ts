@@ -505,12 +505,27 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
                   this.loadingData = false;
                 }
             } else {
+              if(payloadRequest.payload.txjson.TransactionType.toLowerCase() === 'payment' && payloadRequest.payload.custom_meta && payloadRequest.payload.custom_meta.blob) {
+                this.snackBar.open("Auto Release NOT activated!", null, {panelClass: 'snackbar-failed', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
+                this.autoReleaseActivated = false;
+              } else {
+                this.snackBar.open(trxType+" not successfull!", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
+              }
               this.loadingData = false;
-              this.snackBar.open(trxType+" not successfull!", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
+              
+              if(this.websocket) {
+                this.websocket.unsubscribe();
+                this.websocket.complete();
+              }
             }
         } else if(message.expired || message.expires_in_seconds <= 0) {
+          if(payloadRequest.payload.txjson.TransactionType.toLowerCase() === 'payment' && payloadRequest.payload.custom_meta && payloadRequest.payload.custom_meta.blob) {
+            this.snackBar.open("Auto Release NOT activated!", null, {panelClass: 'snackbar-failed', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
+            this.autoReleaseActivated = false;
+          } else {
+            this.snackBar.open(trxType+" not successfull!", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
+          }
           this.loadingData = false;
-          this.snackBar.open(trxType+" not successfull!", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
           if(this.websocket) {
             this.websocket.unsubscribe();
             this.websocket.complete();

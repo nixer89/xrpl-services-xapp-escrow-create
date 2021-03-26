@@ -241,15 +241,13 @@
             <mat-card class="mat-card-green" fxLayoutAlign="center center">
               <label>Yayyy! Your Escrow has been created!</label>
             </mat-card>
-            <mat-card class="mat-card-orange">
-              <label>Do you want to add your Escrow to the "Escrow Releaser" service of xumm.community?</label>
-            </mat-card>
+            <label class="description">Do you want to add your Escrow to the "Escrow Releaser" service of https://xumm.community?</label>
             <label>Once an Escrow is finished, it has to be 'released'. This does not happen automatically - an EscrowFinish transaction is needed.</label>
             <label>You can add your Escrow to our "Escrow Releaser" service and we will automatically release your Escrow for you at:</label>
-            <mat-card fxLayoutAlign="center center">
-              <label color="primary">{{getExpectedAutoReleaseTime()}}</label>
+            <mat-card fxLayoutAlign="center center" class="mat-card-blue">
+              <label>{{getExpectedAutoReleaseTime()}}</label>
             </mat-card>
-            <label color="warn">Adding your Escrow to the service comes with a fee of 1 XRP.</label>
+            <label class="xumm-red">Adding your Escrow to this service comes with a fee of 1 XRP.</label>
             <div fxLayoutAlign="center center" stype="padding-top: 0.5em;">
               <button mat-raised-button color="primary" (click)="addEscrowToAutoReleaser()" [disabled]="loadingData || autoReleaseActivated">Activate Auto Release</button>
             </div>
