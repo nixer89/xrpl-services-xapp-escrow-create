@@ -10,7 +10,6 @@ import { GenericBackendPostRequest, TransactionValidation } from './utils/types'
 import { XummTypes } from 'xumm-sdk';
 import { webSocket, WebSocketSubject} from 'rxjs/webSocket';
 import { Subscription, Observable } from 'rxjs';
-import { DeviceDetectorService } from 'ngx-device-detector';
 import { OverlayContainer } from '@angular/cdk/overlay';
 import * as flagUtils from './utils/flagutils';
 import { FormControl } from '@angular/forms';
@@ -28,7 +27,6 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
               private snackBar: MatSnackBar,
               private overlayContainer: OverlayContainer,
               private dateAdapter: DateAdapter<any>,
-              private device:DeviceDetectorService,
               private googleAnalytics: GoogleAnalyticsService) { }
 
 
@@ -93,7 +91,6 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
   escrowReleaseData: any = {};
 
   infoLabel:string = null;
-  infoLabel2:string = null;
   autoReleaseActivated:boolean = false;
   escrowDestinationSigned:boolean = false;
   escrowDestinationHasDestTagEnabled:boolean = false;
@@ -110,7 +107,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
 
       if(ottData) {
 
-        this.infoLabel = JSON.stringify(ottData);
+        //this.infoLabel = JSON.stringify(ottData);
         
         this.testMode = ottData.nodetype == 'TESTNET';
 
@@ -149,6 +146,15 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
       this.overlayContainer.getContainerElement().classList.add(this.themeClass);
     });
     //this.infoLabel = JSON.stringify(this.device.getDeviceInfo());
+
+    //add event listeners for QRScanner
+    if (typeof window.addEventListener === 'function') {
+      window.addEventListener("message", event => this.handleScanEvent(event));
+    }
+    
+    if (typeof document.addEventListener === 'function') {
+      document.addEventListener("message", event => this.handleScanEvent(event));
+    }
 
     //this.dateTimePickerSupported = !(this.device && this.device.getDeviceInfo() && this.device.getDeviceInfo().os_version && (this.device.getDeviceInfo().os_version.toLowerCase().includes('ios') || this.device.getDeviceInfo().browser.toLowerCase().includes('safari') || this.device.getDeviceInfo().browser.toLowerCase().includes('edge')));
     this.dateTimePickerSupported = true;
@@ -214,7 +220,8 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
     
     this.validAddress = this.destinationInput && this.destinationInput.trim().length > 0 && isValidXRPAddress(this.destinationInput.trim());
 
-    if(this.oldDestinationInput != this.destinationInput && this.validAddress) {
+    if((this.oldDestinationInput != this.destinationInput && this.validAddress) || userHasSignedInDestination || insertedDestinationAccount) {
+
       //dest acc has changed, check status
       this.destinationAccountExists = await this.checkIfDestinationAccountExists(this.destinationInput);
 
@@ -457,7 +464,6 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
                   transactionResult = await this.xummService.validateTransaction(message.payload_uuidv4);
 
                 console.log("trx result: " + JSON.stringify(transactionResult));
-                //this.infoLabel2 = JSON.stringify(transactionResult);
 
                 if(this.websocket) {
                     this.websocket.unsubscribe();
@@ -565,36 +571,26 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
       window.ReactNativeWebView.postMessage(JSON.stringify({
         command: 'scanQr'
       }));
-
-      function messageHandler (event) {
-        console.log(event.data)
-      }
-      
-      if (typeof window.addEventListener === 'function') {
-        window.addEventListener("message", this.handleScanEvent)
-      }
-      if (typeof document.addEventListener === 'function') {
-        document.addEventListener("message", this.handleScanEvent)
-      }
     }
   }
 
   async handleScanEvent(event:any) {
-    //console.log(event.data);
     let qrResult = JSON.parse(event.data);
 
-    if(qrResult.method == "scanQr" && qrResult.reason == "SCANNED" && isValidXRPAddress(qrResult.qrContents)) {
-      this.destinationInput = qrResult.qrContents;
-      await this.checkChanges(true);
-      this.loadingData = false;
-    } else if(qrResult.method == "scanQr" && qrResult.reason == "USER_CLOSE") {
-      //do not do anything on user close
-      this.loadingData = false;
-    } else {
-      this.destinationInput = null;
-      this.snackBar.open("Invalid XRPL account", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
-      await this.checkChanges();
-      this.loadingData = false;
+    if(qrResult && qrResult.method == "scanQr" ) {
+      if(qrResult.reason == "SCANNED" && isValidXRPAddress(qrResult.qrContents)) {
+        this.destinationInput = qrResult.qrContents;
+        await this.checkChanges(true);
+        this.loadingData = false;
+      } else if(qrResult.reason == "USER_CLOSE") {
+        //do not do anything on user close
+        this.loadingData = false;
+      } else {
+        this.destinationInput = null;
+        this.snackBar.open("Invalid XRPL account", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
+        await this.checkChanges();
+        this.loadingData = false;
+      }
     }
   }
 
@@ -759,7 +755,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
         return expectedRelease.toLocaleString();
     } else
         return "-";
-}
+  }
 
   close() {
     if (typeof window.ReactNativeWebView !== 'undefined') {

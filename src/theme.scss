@@ -150,16 +150,36 @@ a:active {
   color: rgb(96, 104, 133) !important;
 }
 
-.loading {
-  color: rgb(248, 191, 76)
+.xumm-blue {
+  color: rgb(48, 82, 255) !important;
 }
 
-.secondary {
-  color: rgb(172, 177, 193)
+.xumm-orange {
+  color: rgb(248, 191, 76) !important;
+}
+
+.xumm-green {
+  color: rgb(59, 220, 150) !important;
+}
+
+.xumm-red {
+  color: rgb(255, 91, 91) !important;
 }
 
 .xumm-grey {
   color: rgb(96, 104, 133) !important;
+}
+
+.xumm-silver {
+  color: rgb(172, 177, 193) !important;
+}
+
+.xumm-light {
+  color: rgb(248, 250, 253) !important;
+}
+
+.description {
+  color: rgb(248, 191, 76) !important;
 }
 
 .mat-step-icon.mat-step-icon-state-done {
@@ -282,8 +302,7 @@ a:active {
     color: rgb(48, 82, 255) !important;
   }
 
-  .mat-card.mat-card-description {
-    background-color: rgba(48, 82, 255, 0.06) !important;
+  .description {
     color: rgb(48, 82, 255) !important;
   }
 
@@ -372,11 +391,6 @@ a:active {
     background-color: rgba(48, 82, 255, 0.22) !important;
     color: rgb(48, 82, 255) !important;
   }
-
-  .mat-card.mat-card-description {
-    background-color: rgba(248, 191, 76, 0.22) !important;
-    color: rgb(248, 191, 76) !important;
-  }
   
   @include angular-material-theme($dark-theme);
 }
@@ -452,11 +466,6 @@ a:active {
     color: rgb(48, 82, 255) !important;
   }
 
-  .mat-card.mat-card-description {
-    background-color: rgba(248, 191, 76, 0.17) !important;
-    color: rgb(248, 191, 76) !important;
-  }
-  
   @include angular-material-theme($moonlight-theme);
 }
 
@@ -529,11 +538,6 @@ a:active {
   .mat-card.mat-card-blue {
     background-color: rgba(48, 82, 255, 0.17) !important;
     color: rgb(48, 82, 255) !important;
-  }
-
-  .mat-card.mat-card-description {
-    background-color: rgba(248, 191, 76, 0.17) !important;
-    color: rgb(248, 191, 76) !important;
   }
   
   @include angular-material-theme($royal-theme);
