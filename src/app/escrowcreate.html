@@ -23,7 +23,7 @@
       <mat-card fxLayout="column" fxLayoutGap="0.5em">
           <ng-template matStepLabel>Escrow Owner</ng-template>
           <div fxLayout="column" fxLayoutGap="0.5em" *ngIf="originalAccountInfo">
-            <mat-card class="mat-card-orange">
+            <mat-card class="mat-card-description">
               <label>What is the account you want to create the Escrow with?</label>
             </mat-card>
             <label *ngIf="originalAccountInfo && (originalAccountInfo.Account || originalAccountInfo.account)">Currently selected:</label>
@@ -60,7 +60,7 @@
     <mat-step completed="false" editable="false">
       <mat-card fxLayout="column" fxLayoutGap="0.5em">
           <ng-template matStepLabel>Escrow Destination</ng-template>
-          <mat-card class="mat-card-orange">
+          <mat-card class="mat-card-description">
             <label>Please enter/paste the destination account for your escrow or use one of the buttons below.</label>
           </mat-card>
           <form fxLayout="column" fxLayoutGap="0.5em" style="padding-top: 1em;">
@@ -98,7 +98,7 @@
           </div>
 
           <div style="padding-top: 0.5em;" fxLayoutGap="0.5em">
-              <button mat-raised-button color="primary" (click)="moveNext()" [disabled]="!validAddress || loadingData || escrowDestinationHasDestTagEnabled">Next</button>
+              <button mat-raised-button color="primary" (click)="moveNext()" [disabled]="!validAddress || loadingData || escrowDestinationHasDestTagEnabled || !destinationAccountExists">Next</button>
               <button mat-raised-button class="xumm-grey-background" (click)="moveBack()" [disabled]="loadingData">Back</button>
           </div>
       </mat-card>
@@ -107,7 +107,7 @@
     <mat-step completed="false" editable="false">
       <mat-card fxLayout="column" fxLayoutGap="0.5em">
           <ng-template matStepLabel>Escrow Amount</ng-template>
-          <mat-card class="mat-card-orange">
+          <mat-card class="mat-card-description">
             <label>Please define the amount of XRP you want to lock in your Escrow.</label>
           </mat-card>
           <form fxLayout="column" fxLayoutGap="0.5em" style="padding-top: 1em;">
@@ -140,21 +140,25 @@
       <mat-card fxLayout="column" fxLayoutGap="0.5em">
           <ng-template matStepLabel>Escrow Details</ng-template>
           <label>Finish After time</label>
-          <mat-card class="mat-card-orange">
+          <mat-card class="mat-card-description">
             <label>Please define a time your Escrow can be finished earliest. If you do not provide this date then you have to define a CancelAfter time or condition.</label>
           </mat-card>
           <form fxLayout="column" fxLayoutGap="0.5em" style="padding-top: 1em;">
             <mat-form-field>
               <mat-label>Choose a date</mat-label>
-              <input matInput name="finishafterdate" [matDatepicker]="picker" [formControl]="finishAfterFormCtrl" (dateChange)="checkChanges()">
+              <input matInput name="finishafterdate" [matDatepicker]="picker" [formControl]="finishAfterFormCtrl" (dateChange)="checkChanges()" readonly="true" (click)="picker.open()">
               <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
               <mat-datepicker #picker></mat-datepicker>
             </mat-form-field>
             <mat-form-field>
               <input matInput name="finishaftertime" type="text" step="2" placeholder="HH:mm:ss (24h format)" [(ngModel)]="finishafterTimeInput" (ngModelChange)="checkChanges()">
             </mat-form-field>
-            <mat-hint *ngIf="(finishafterTimeInput || finishafterDateInput) && !validFinishAfter && !finishDateInFuture">Invalid date/time.</mat-hint>
+            <button mat-icon-button color ="warn" (click)="resetFinishAfter()">
+              <mat-icon>highlight_off</mat-icon>
+            </button>
+            <mat-hint *ngIf="finishafterTimeInput && finishAfterFormCtrl && !validFinishAfter && !finishDateInFuture">Invalid date/time.</mat-hint>
             <mat-hint *ngIf="finishDateInFuture">Finish After needs to be in the future.</mat-hint>
+            <mat-hint *ngIf="isFinishAfterDateSet() && !finishafterTimeInput">You have set a date. Please also set a time!</mat-hint>
             <mat-hint *ngIf="validFinishAfter && !finishDateInFuture" style="color: grey !important">UTC time: <b>{{finishAfterDateTime.toUTCString()}}</b></mat-hint>
           </form>
 
@@ -171,21 +175,25 @@
 
             <div fxLayout="column" fxLayoutGap="0.3em">
               <label>Cancel After time</label>
-              <mat-card class="mat-card-orange">
+              <mat-card class="mat-card-description">
                 <label>Here you can define a time at which your Escrow can only be cancelled. If this time has passed and the Escrow was not finished, the Escrow can only be cancelled and the funds can only be sent back to the Escrow Owner.</label>
               </mat-card>
               <form fxLayout="column" fxLayoutGap="0.5em" style="padding-top: 1em;">
                 <mat-form-field>
                   <mat-label>Choose a date</mat-label>
-                  <input matInput name="cancelafterdate" [matDatepicker]="picker2" [formControl]="cancelAfterFormCtrl" (dateChange)="checkChanges()">
+                  <input matInput name="cancelafterdate" [matDatepicker]="picker2" [formControl]="cancelAfterFormCtrl" (dateChange)="checkChanges()" readonly="true" (click)="picker2.open()">
                   <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
                   <mat-datepicker #picker2></mat-datepicker>
                 </mat-form-field>
                 <mat-form-field>
                   <input matInput name="cancelaftertime" step="2" placeholder="HH:mm:ss (24h format)" [(ngModel)]="cancelafterTimeInput" (ngModelChange)="checkChanges()">
                 </mat-form-field>
-                <mat-hint *ngIf="(cancelafterTimeInput || cancelafterDateInput) && !validCancelAfter">Invalid date/time.</mat-hint>
+                <button mat-icon-button color="warn" (click)="resetCancelAfter()">
+                  <mat-icon>highlight_off</mat-icon>
+                </button>
+                <mat-hint *ngIf="(cancelAfterFormCtrl && cancelafterTimeInput && !validCancelAfter">Invalid date/time.</mat-hint>
                 <mat-hint *ngIf="validCancelAfter && cancelDateInFuture">Cancel After needs to be in the future.</mat-hint>
+                <mat-hint *ngIf="isCancelAfterDateSet() && !cancelafterTimeInput">You have set a date. Please also set a time!</mat-hint>
                 <mat-hint *ngIf="validCancelAfter && !cancelDateInFuture && cancelDateBeforeFinishDate">Cancel After needs to be after Finish After.</mat-hint>
                 <mat-hint *ngIf="validCancelAfter && !cancelDateInFuture && !cancelDateBeforeFinishDate" style="color: grey !important">UTC time: <b>{{cancelAfterDateTime.toUTCString()}}</b></mat-hint>
               </form>
@@ -202,8 +210,12 @@
             </div>
           </mat-expansion-panel>
 
-          <label *ngIf="validAddress && validAmount && (!validFinishAfter && !validCondition)">Please provide a Finish After time.</label>
-          <label *ngIf="validAddress && validAmount &&  validCondition && (!validFinishAfter && !validCancelAfter)">Please provide a Finish After or Cancel After time.</label>
+          <mat-card *ngIf="validAddress && validAmount && (!validFinishAfter && !validCondition)" class="mat-card-orange">
+            <label >Please provide a Finish After time.</label>
+          </mat-card>
+          <mat-card *ngIf="validAddress && validAmount &&  validCondition && (!validFinishAfter && !validCancelAfter)" class="mat-card-orange">
+            <label>Please provide a Finish After or Cancel After time.</label>
+          </mat-card>
 
           <div *ngIf="loadingData" fxLayoutAlign="center center">
             <label>Preparing your Escrow...</label>
@@ -221,7 +233,7 @@
       <mat-card fxLayout="column" fxLayoutGap="0.5em">
           <ng-template matStepLabel>Escrow Auto Release</ng-template>
           <div *ngIf="!isAbleToAutoRelease() && !autoReleaseActivated" fxLayout="column" fxLayoutGap="0.5em">
-            <mat-card class="mat-card-orange">
+            <mat-card class="mat-card-description">
               <label>You Escrow can not be added to the Escrow Releaser service since it does not fulfill the requirements.</label>
             </mat-card>
             <label>Requirements are:</label>

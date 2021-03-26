@@ -282,6 +282,11 @@ a:active {
     color: rgb(48, 82, 255) !important;
   }
 
+  .mat-card.mat-card-description {
+    background-color: rgba(48, 82, 255, 0.06) !important;
+    color: rgb(48, 82, 255) !important;
+  }
+
   .mat-step-label.mat-step-label-active {
     color: rgb(0, 0, 0) !important;
   }
@@ -367,6 +372,11 @@ a:active {
     background-color: rgba(48, 82, 255, 0.22) !important;
     color: rgb(48, 82, 255) !important;
   }
+
+  .mat-card.mat-card-description {
+    background-color: rgba(248, 191, 76, 0.22) !important;
+    color: rgb(248, 191, 76) !important;
+  }
   
   @include angular-material-theme($dark-theme);
 }
@@ -441,6 +451,11 @@ a:active {
     background-color: rgba(48, 82, 255, 0.17) !important;
     color: rgb(48, 82, 255) !important;
   }
+
+  .mat-card.mat-card-description {
+    background-color: rgba(248, 191, 76, 0.17) !important;
+    color: rgb(248, 191, 76) !important;
+  }
   
   @include angular-material-theme($moonlight-theme);
 }
@@ -514,6 +529,11 @@ a:active {
   .mat-card.mat-card-blue {
     background-color: rgba(48, 82, 255, 0.17) !important;
     color: rgb(48, 82, 255) !important;
+  }
+
+  .mat-card.mat-card-description {
+    background-color: rgba(248, 191, 76, 0.17) !important;
+    color: rgb(248, 191, 76) !important;
   }
   
   @include angular-material-theme($royal-theme);
