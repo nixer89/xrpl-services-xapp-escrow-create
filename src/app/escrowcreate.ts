@@ -14,6 +14,7 @@ import { OverlayContainer } from '@angular/cdk/overlay';
 import * as flagUtils from './utils/flagutils';
 import { FormControl } from '@angular/forms';
 import { DateAdapter } from '@angular/material/core';
+import { TypeWriter } from './utils/TypeWriter';
 
 @Component({
   selector: 'escrowcreate',
@@ -95,8 +96,14 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
   escrowDestinationSigned:boolean = false;
   escrowDestinationHasDestTagEnabled:boolean = false;
   destinationAccountExists = false;
+  validatingEscrow:boolean = false;
+
+  checkBoxYears:boolean = false;
 
   oldDestinationInput:string = null;
+
+  title: string = "Xumm Community xApp";
+  tw: TypeWriter
 
   themeClass = 'dark-theme';
   backgroundColor = '#000000';
@@ -156,6 +163,12 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
       document.addEventListener("message", event => this.handleScanEvent(event));
     }
 
+    this.tw = new TypeWriter(["Xumm Community xApp", "created by nixerFFM", "Xumm Community xApp"], t => {
+      this.title = t;
+    })
+
+    this.tw.start();
+
     //this.dateTimePickerSupported = !(this.device && this.device.getDeviceInfo() && this.device.getDeviceInfo().os_version && (this.device.getDeviceInfo().os_version.toLowerCase().includes('ios') || this.device.getDeviceInfo().browser.toLowerCase().includes('safari') || this.device.getDeviceInfo().browser.toLowerCase().includes('edge')));
     this.dateTimePickerSupported = true;
   }
@@ -178,8 +191,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
     //console.log("destinationInput: " + this.destinationInput);
 
     if(this.finishAfterFormCtrl && this.finishAfterFormCtrl.value && this.finishafterTimeInput) {
-      let datePicker = new Date(this.finishAfterFormCtrl.value);
-      this.finishAfterDateTime = new Date(datePicker.getFullYear() + "-" + ((datePicker.getMonth()+1) < 10 ? "0":"")+(datePicker.getMonth()+1) + "-" + datePicker.getDate() + "T" + this.finishafterTimeInput.trim());    
+      this.finishAfterDateTime = new Date(this.finishAfterFormCtrl.value.format("yyyy-MM-DD") + "T" + this.finishafterTimeInput.trim());    
     }
     else
       this.finishAfterDateTime = null;
@@ -191,8 +203,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
       this.escrowYears = this.finishAfterDateTime.getFullYear() - (new Date()).getFullYear();
 
     if(this.cancelAfterFormCtrl && this.cancelAfterFormCtrl.value && this.cancelafterTimeInput) {
-      let datePicker2 = new Date(this.cancelAfterFormCtrl.value);
-      this.cancelAfterDateTime = new Date(datePicker2.getFullYear() + "-" + ((datePicker2.getMonth()+1) < 10 ? "0":"")+(datePicker2.getMonth()+1) + "-" + datePicker2.getDate() + "T" + this.cancelafterTimeInput.trim());    
+      this.cancelAfterDateTime = new Date(this.cancelAfterFormCtrl.value.format("yyyy-MM-DD") + "T" + this.cancelafterTimeInput.trim());    
     }
     else
       this.cancelAfterDateTime = null;
@@ -247,37 +258,40 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
 
     this.validCondition = this.passwordInput && this.passwordInput.trim().length > 0;
 
+    this.validatingEscrow = true;
+
+    this.isValidEscrow = true;
     //check some fields first
     if(this.isFinishAfterDateSet() && !this.finishafterTimeInput)
       this.isValidEscrow = false;
-    else
-      this.isValidEscrow = true;
 
     if(this.finishafterTimeInput && !this.validFinishAfter)
       this.isValidEscrow = false;
-    else
-      this.isValidEscrow = true;
 
     if(this.isCancelAfterDateSet() && !this.cancelafterTimeInput)
       this.isValidEscrow = false;
-    else
-      this.isValidEscrow = true;
 
     if(this.isValidEscrow && this.cancelafterTimeInput && !this.validCancelAfter)
       this.isValidEscrow = false;
 
     if(this.isValidEscrow && this.validAmount && this.validAddress && (this.validFinishAfter || this.validCondition)) {
-      if(this.validCondition)
-        this.isValidEscrow = this.validFinishAfter || this.validCancelAfter
-      else
-        this.isValidEscrow = this.validFinishAfter 
+      if(this.validCondition && !this.validFinishAfter && !this.validCancelAfter)
+        this.isValidEscrow = false
+      else if(!this.validFinishAfter)
+        this.isValidEscrow = false 
     }
     else
       this.isValidEscrow = false;
 
     if(this.isValidEscrow && this.validFinishAfter && this.validCancelAfter) {
-      this.isValidEscrow = !this.cancelDateBeforeFinishDate && !this.cancelDateInFuture && !this.finishDateInFuture;
+      if(this.cancelDateBeforeFinishDate || this.cancelDateInFuture || this.finishDateInFuture)
+        this.isValidEscrow = false
     }
+
+    if(this.escrowYears > 10 && !this.checkBoxYears)
+      this.isValidEscrow = false;
+
+    this.validatingEscrow = false;
 
     //console.log("isValidEscrow: " + this.isValidEscrow);
   }
