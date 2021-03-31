@@ -277,8 +277,6 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
     if(this.isValidEscrow && this.validAmount && this.validAddress && (this.validFinishAfter || this.validCondition)) {
       if(this.validCondition && !this.validFinishAfter && !this.validCancelAfter)
         this.isValidEscrow = false
-      else if(!this.validFinishAfter)
-        this.isValidEscrow = false 
     }
     else
       this.isValidEscrow = false;
