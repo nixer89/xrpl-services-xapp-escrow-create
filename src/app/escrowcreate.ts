@@ -580,6 +580,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
               TransactionType: "SignIn"
           },
           custom_meta: {
+            instruction: "Please choose your the account which should create the Escrow.\n\nSign the request to confirm.",
             blob: { source: "EscrowOwner"}
           }
       }
@@ -638,6 +639,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
               TransactionType: "SignIn"
           },
           custom_meta: {
+            instruction: "Please choose the Escrow Destination account. This is the account where the XRP are sent to once the Escrow is finished.\n\nSign the request to confirm.",
             blob: { source: "EscrowDestination"}
           }
       }
