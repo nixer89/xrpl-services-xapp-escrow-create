@@ -326,76 +326,87 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
     this.loadingData = true;
     //this.infoLabel = "sending payload";
     try {
-    //this.googleAnalytics.analyticsEventEmitter('escrow_create', 'sendToXumm', 'escrow_create_component');
-    let xummPayload:XummTypes.XummPostPayloadBodyJson = {
-      options: {
-        expire: 5,
-        forceAccount: true
-      },
-      txjson: {
-        TransactionType: "EscrowCreate",
-        Account: this.originalAccountInfo.Account
-      }, custom_meta: {
-        instruction: ""
+      //this.googleAnalytics.analyticsEventEmitter('escrow_create', 'sendToXumm', 'escrow_create_component');
+      let xummPayload:XummTypes.XummPostPayloadBodyJson = {
+        options: {
+          expire: 5,
+          forceAccount: true
+        },
+        txjson: {
+          TransactionType: "EscrowCreate",
+          Account: this.originalAccountInfo.Account
+        }, custom_meta: {
+          instruction: ""
+        }
       }
-    }
 
-    if(this.escrowYears > 10) {
-      xummPayload.custom_meta.instruction += "ATTENTION: Your XRP will be inaccessible for " + this.escrowYears + "years!\n\n";
-    }
+      if(this.escrowYears > 10) {
+        xummPayload.custom_meta.instruction += "ATTENTION: Your XRP will be inaccessible for " + this.escrowYears + "years!\n\n";
+      }
 
-    if(this.destinationInput && this.destinationInput.trim().length>0 && isValidXRPAddress(this.destinationInput)) {
-      xummPayload.txjson.Destination = this.destinationInput.trim();
-      xummPayload.custom_meta.instruction += "- Escrow Destination: " + this.destinationInput.trim();
-    }
-
-    
-    if(this.amountInput && parseFloat(this.amountInput) >= 0.000001) {
-      xummPayload.txjson.Amount = parseFloat(this.amountInput)*1000000+"";
-      xummPayload.custom_meta.instruction += "\n- Escrow Amount: " + this.amountInput;
-    }
- 
-    if(this.validCancelAfter) {
-      xummPayload.txjson.CancelAfter = normalizer.utcToRippleEpocheTime(this.cancelAfterDateTime.getTime());
-      xummPayload.custom_meta.instruction += "\n- Cancel After (UTC): " + this.cancelAfterDateTime.toUTCString();
-    }
-
-    if(this.validFinishAfter) {
-      xummPayload.txjson.FinishAfter = normalizer.utcToRippleEpocheTime(this.finishAfterDateTime.getTime());
-      xummPayload.custom_meta.instruction += "\n- Finish After (UTC): " + this.finishAfterDateTime.toUTCString();
-    }
-
-    if(this.validCondition) {
-      let fulfillment_bytes:Buffer = Buffer.from(this.passwordInput.trim(), 'utf-8');
+      if(this.destinationInput && this.destinationInput.trim().length>0 && isValidXRPAddress(this.destinationInput)) {
+        xummPayload.txjson.Destination = this.destinationInput.trim();
+        xummPayload.custom_meta.instruction += "- Escrow Destination: " + this.destinationInput.trim();
+      }
 
       
-      import('five-bells-condition').then( cryptoCondition => {
-        let myFulfillment = new cryptoCondition.PreimageSha256();
+      if(this.amountInput && parseFloat(this.amountInput) >= 0.000001) {
+        xummPayload.txjson.Amount = parseFloat(this.amountInput)*1000000+"";
+        xummPayload.custom_meta.instruction += "\n- Escrow Amount: " + this.amountInput;
+      }
+  
+      if(this.validCancelAfter) {
+        xummPayload.txjson.CancelAfter = normalizer.utcToRippleEpocheTime(this.cancelAfterDateTime.getTime());
+        xummPayload.custom_meta.instruction += "\n- Cancel After (UTC): " + this.cancelAfterDateTime.toUTCString();
+      }
 
-        myFulfillment.setPreimage(fulfillment_bytes);
+      if(this.validFinishAfter) {
+        xummPayload.txjson.FinishAfter = normalizer.utcToRippleEpocheTime(this.finishAfterDateTime.getTime());
+        xummPayload.custom_meta.instruction += "\n- Finish After (UTC): " + this.finishAfterDateTime.toUTCString();
+      }
 
-        let fulfillment = myFulfillment.serializeBinary().toString('hex').toUpperCase()
-        //console.log('Fulfillment: ', fulfillment)
-        //console.log('             ', myFulfillment.serializeUri())
+      if(this.validCondition) {
+        let fulfillment_bytes:Buffer = Buffer.from(this.passwordInput.trim(), 'utf-8');
 
-        var condition = myFulfillment.getConditionBinary().toString('hex').toUpperCase()
-        //console.log('Condition  : ', condition)
-          // 'A0258020' + sha256(fulfillment_bytes) + '810102'
-        //console.log('             ', myFulfillment.getCondition().serializeUri())
+        
+        import('five-bells-condition').then( cryptoCondition => {
+          let myFulfillment = new cryptoCondition.PreimageSha256();
 
-        //console.log()
+          myFulfillment.setPreimage(fulfillment_bytes);
 
-        //console.log(
-        //  'Fulfillment valid for Condition?      ',
-        //    cryptoCondition.validateFulfillment(
-        //    cryptoCondition.Fulfillment.fromBinary(Buffer.from(fulfillment, 'hex')).serializeUri(), 
-        //    cryptoCondition.Condition.fromBinary(Buffer.from(condition, 'hex')).serializeUri()
-        //  )
-        //)
+          let fulfillment = myFulfillment.serializeBinary().toString('hex').toUpperCase()
+          //console.log('Fulfillment: ', fulfillment)
+          //console.log('             ', myFulfillment.serializeUri())
 
-        xummPayload.txjson.Condition = condition;
-        xummPayload.custom_meta.instruction += "\n- With a password ✓";
+          var condition = myFulfillment.getConditionBinary().toString('hex').toUpperCase()
+          //console.log('Condition  : ', condition)
+            // 'A0258020' + sha256(fulfillment_bytes) + '810102'
+          //console.log('             ', myFulfillment.getCondition().serializeUri())
 
+          //console.log()
+
+          //console.log(
+          //  'Fulfillment valid for Condition?      ',
+          //    cryptoCondition.validateFulfillment(
+          //    cryptoCondition.Fulfillment.fromBinary(Buffer.from(fulfillment, 'hex')).serializeUri(), 
+          //    cryptoCondition.Condition.fromBinary(Buffer.from(condition, 'hex')).serializeUri()
+          //  )
+          //)
+
+          xummPayload.txjson.Condition = condition;
+          xummPayload.custom_meta.instruction += "\n- With a password ✓";
+
+          let backendRequest: GenericBackendPostRequest = {
+            options: {
+              web: false,
+              xrplAccount: this.originalAccountInfo.Account
+            },
+            payload: xummPayload
+          }
+
+          this.waitForTransactionSigning(backendRequest);
+        });      
+      } else {
         let backendRequest: GenericBackendPostRequest = {
           options: {
             web: false,
@@ -405,21 +416,10 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
         }
 
         this.waitForTransactionSigning(backendRequest);
-      });      
-    } else {
-      let backendRequest: GenericBackendPostRequest = {
-        options: {
-          web: false,
-          xrplAccount: this.originalAccountInfo.Account
-        },
-        payload: xummPayload
       }
-
-      this.waitForTransactionSigning(backendRequest);
+    } catch(err) {
+      //this.infoLabel = JSON.stringify(err);
     }
-  } catch(err) {
-    //this.infoLabel = JSON.stringify(err);
-  }
   }
 
   async waitForTransactionSigning(payloadRequest: GenericBackendPostRequest) {
@@ -432,11 +432,13 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
         //this.infoLabel = "Called xumm successfully"
         console.log(JSON.stringify(xummResponse));
         if(!xummResponse || !xummResponse.uuid) {
+          this.loadingData = false;
           this.snackBar.open("Error contacting XUMM backend", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
           return;
         }        
     } catch (err) {
         //console.log(JSON.stringify(err));
+        this.loadingData = false;
         this.snackBar.open("Could not contact XUMM backend", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
         return;
     }
@@ -456,7 +458,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
     if(this.websocket && !this.websocket.closed) {
       this.websocket.unsubscribe();
       this.websocket.complete();
-  }
+    }
 
     this.websocket = webSocket(xummResponse.refs.websocket_status);
     this.websocket.asObservable().subscribe(async message => {
