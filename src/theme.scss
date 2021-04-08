@@ -251,25 +251,22 @@ a:active {
     background-color:rgb(248, 250, 253) !important;
   }
 
-  .mat-expansion-panel.expansion-panel-light {
+  .mat-expansion-panel-header:focus {
     background-color:rgb(248, 250, 253) !important;
   }
 
-  .mat-expansion-panel-header.expansion-panel-light {
+  .mat-expansion-panel-header:hover {
     background-color:rgb(248, 250, 253) !important;
   }
 
-  .mat-expansion-panel.expansion-panel-darker {
-    background-color:rgb(248, 250, 253) !important;
-  }
-
-  .mat-expansion-panel-header.expansion-panel-darker {
-    background-color:rgb(248, 250, 253) !important;
+  .mat-calendar {
+    background-color:#FFFFFF !important;
+    color: #000000 !important;
   }
 
   .theme-background {
     background-color:#FFFFFF !important;
-    color: #000000;
+    color: #000000 !important;
   }
 
   .snackbar-success {
@@ -341,25 +338,22 @@ a:active {
     background-color:rgba(96, 104, 133, 0.25) !important;
   }
 
-  .mat-expansion-panel.expansion-panel-light {
+  .mat-expansion-panel-header:focus {
     background-color:rgba(96, 104, 133, 0.25) !important;
   }
 
-  .mat-expansion-panel-header.expansion-panel-light {
+  .mat-expansion-panel-header:hover {
     background-color:rgba(96, 104, 133, 0.25) !important;
   }
 
-  .mat-expansion-panel.expansion-panel-darker {
-    background-color:rgba(96, 104, 133, 0.25) !important;
-  }
-
-  .mat-expansion-panel-header.expansion-panel-darker {
-    background-color:rgba(96, 104, 133, 0.25) !important;
+  .mat-calendar {
+    background-color:#000000 !important;
+    color: #FFFFFF !important;
   }
 
   .theme-background {
     background-color:#000000 !important;
-    color: #FFFFFF;
+    color: #FFFFFF !important;
   }
 
   .snackbar-success {
@@ -415,25 +409,22 @@ a:active {
     background-color:rgba(96, 104, 133, 0.19) !important;
   }
 
-  .mat-expansion-panel.expansion-panel-light {
+  .mat-expansion-panel-header:focus {
     background-color:rgba(96, 104, 133, 0.19) !important;
   }
 
-  .mat-expansion-panel-header.expansion-panel-light {
+  .mat-expansion-panel-header:hover {
     background-color:rgba(96, 104, 133, 0.19) !important;
   }
 
-  .mat-expansion-panel.expansion-panel-darker {
-    background-color:rgba(96, 104, 133, 0.19) !important;
-  }
-
-  .mat-expansion-panel-header.expansion-panel-darker {
-    background-color:rgba(96, 104, 133, 0.19) !important;
+  .mat-calendar {
+    background-color:rgb(24, 26, 33) !important;
+    color: #FFFFFF !important;
   }
 
   .theme-background {
     background-color:rgb(24, 26, 33) !important;
-    color: #FFFFFF;
+    color: #FFFFFF !important;
   }
 
   .snackbar-success {
@@ -489,25 +480,22 @@ a:active {
     background-color:rgba(96, 104, 133, 0.22) !important;
   }
 
-  .mat-expansion-panel.expansion-panel-light {
+  .mat-expansion-panel-header:focus {
     background-color:rgba(96, 104, 133, 0.22) !important;
   }
 
-  .mat-expansion-panel-header.expansion-panel-light {
+  .mat-expansion-panel-header:hover {
     background-color:rgba(96, 104, 133, 0.22) !important;
   }
 
-  .mat-expansion-panel.expansion-panel-darker {
-    background-color:rgba(96, 104, 133, 0.22) !important;
-  }
-
-  .mat-expansion-panel-header.expansion-panel-darker {
-    background-color:rgba(96, 104, 133, 0.22) !important;
+  .mat-calendar {
+    background-color:rgb(3, 11, 54) !important;
+    color: #FFFFFF !important;
   }
 
   .theme-background {
     background-color:rgb(3, 11, 54) !important;
-    color: #FFFFFF;
+    color: #FFFFFF !important;
   }
 
   .snackbar-success {

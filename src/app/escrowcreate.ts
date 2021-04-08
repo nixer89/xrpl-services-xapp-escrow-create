@@ -365,7 +365,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
         let fulfillment_bytes:Buffer = Buffer.from(this.passwordInput.trim(), 'utf-8');
 
         
-        await import('five-bells-condition').then( async cryptoCondition => {
+        import('five-bells-condition').then( async cryptoCondition => {
           let myFulfillment = new cryptoCondition.PreimageSha256();
 
           myFulfillment.setPreimage(fulfillment_bytes);
@@ -480,12 +480,21 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
     }
 
     //this.infoLabel = "Showed sign request to user";
-
-    //reset loading when nothing happened in time
-    let timeout = setTimeout(() => this.loadingData = false, (payloadRequest.payload.options.expire * 1000 + 100))
-
     //remove old websocket
+    let interval = null;
     try {
+
+      let lastChange = Date.now();
+
+      interval = setInterval(() => {
+        if(Date.now() > (lastChange + 30000)) { 
+          //30 seconds no update -> we have to have timed out!
+          this.loadingData = false;
+          if(interval)
+            clearInterval(interval);
+        }
+      }, 1000);
+
       if(this.websocket && !this.websocket.closed) {
         this.websocket.unsubscribe();
         this.websocket.complete();
@@ -496,10 +505,14 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
         this.websocket = webSocket(xummResponse.refs.websocket_status);
         this.websocket.asObservable().subscribe(async message => {
             //console.log("message received: " + JSON.stringify(message));
-            this.infoLabel = "message received: " + JSON.stringify(message);
+            //this.infoLabel = "message received: " + JSON.stringify(message);
+
+            lastChange = Date.now();
 
             if((message.payload_uuidv4 && message.payload_uuidv4 === xummResponse.uuid) || message.expired || message.expires_in_seconds <= 0) {
-              clearTimeout(timeout);
+
+              if(interval)
+                clearInterval(interval);
 
               if(this.websocket) {
                 this.websocket.unsubscribe();
@@ -511,8 +524,11 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
         });
       });
     } catch(err) {
-      clearTimeout(timeout);
-      this.infoLabel = JSON.stringify(err);
+      if(interval)
+        clearInterval(interval);
+
+      this.loadingData = false;
+      //this.infoLabel = JSON.stringify(err);
     }
   }
 
@@ -855,7 +871,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
 
   handleError(err) {
     if(err && JSON.stringify(err).length > 2) {
-      this.errorLabel = "Please make a screenshot of the following error and contact @XummCommunity on twitter or send mail to: XummCommunity@gmail.com . Thanks for your help!\n\n" + JSON.stringify(err);
+      this.errorLabel = JSON.stringify(err);
       this.scrollToTop();
     }
     this.snackBar.open("Error occured. Please try again!", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});

@@ -1,6 +1,6 @@
 {
   "name": "xumm-xapp-escrow-create",
-  "version": "0.2.5",
+  "version": "0.3.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve --port 4201 --open",

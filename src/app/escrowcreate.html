@@ -8,18 +8,19 @@
     </mat-toolbar-row>
   </mat-toolbar>
   
-  <div *ngIf="errorLabel" fxLayout="column">
-    <label class="xumm-red break-words" (click)="copyError()">{{errorLabel}}</label>
-    <button mat-icon-button aria-label="Copy Error" (click)="copyError()">
-      <mat-icon style="font-size: 16px; width: fit-content; height: fit-content;">content_copy</mat-icon>
+  <mat-card class="mat-card-red" *ngIf="errorLabel" fxLayout="column" fxLayoutGap="0.5em;">
+    <label>Sorry that this error happened! Please copy of the following error and contact @XummCommunity on twitter or send a mail to: XummCommunity@gmail.com . Thanks for your help!</label><br>
+    <label class="break-words" (click)="copyError()">{{errorLabel}}</label>
+    <button mat-button class="xumm-grey-background" aria-label="Copy Error" (click)="copyError()">
+      Copy&nbsp;<mat-icon style="font-size: 16px; width: fit-content; height: fit-content;">content_copy</mat-icon>
     </button>
-  </div>
-  
+  </mat-card>
+
   <!--label *ngIf="infoLabel" style="color: red">{{infoLabel}}</label><br><br>
   <label *ngIf="infoLabel2" style="color: red">{{infoLabel2}}</label>
   <label *ngIf="infoLabel3" style="color: red">{{infoLabel3}}</label-->
-  <mat-vertical-stepper linear #escrowStepper class="theme-background">
 
+  <mat-vertical-stepper linear #escrowStepper class="theme-background">
     <mat-step completed="false" editable="false" fxLayout="column" fxLayoutGap="0.5em">
       <mat-card fxLayout="column" fxLayoutGap="0.5em">
           <ng-template matStepLabel>Description</ng-template>
