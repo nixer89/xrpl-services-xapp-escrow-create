@@ -155,13 +155,13 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
     });
     //this.infoLabel = JSON.stringify(this.device.getDeviceInfo());
 
-    //add event listeners for QRScanner
+    //add event listeners
     if (typeof window.addEventListener === 'function') {
-      window.addEventListener("message", event => this.handleScanEvent(event));
+      window.addEventListener("message", event => this.handleOverlayEvent(event));
     }
     
     if (typeof document.addEventListener === 'function') {
-      document.addEventListener("message", event => this.handleScanEvent(event));
+      document.addEventListener("message", event => this.handleOverlayEvent(event));
     }
 
     this.tw = new TypeWriter(["Xumm Community xApp", "created by nixerFFM", "Xumm Community xApp"], t => {
@@ -481,19 +481,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
 
     //this.infoLabel = "Showed sign request to user";
     //remove old websocket
-    let interval = null;
     try {
-
-      let lastChange = Date.now();
-
-      interval = setInterval(() => {
-        if(Date.now() > (lastChange + 30000)) { 
-          //30 seconds no update -> we have to have timed out!
-          this.loadingData = false;
-          if(interval)
-            clearInterval(interval);
-        }
-      }, 1000);
 
       if(this.websocket && !this.websocket.closed) {
         this.websocket.unsubscribe();
@@ -507,12 +495,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
             //console.log("message received: " + JSON.stringify(message));
             //this.infoLabel = "message received: " + JSON.stringify(message);
 
-            lastChange = Date.now();
-
             if((message.payload_uuidv4 && message.payload_uuidv4 === xummResponse.uuid) || message.expired || message.expires_in_seconds <= 0) {
-
-              if(interval)
-                clearInterval(interval);
 
               if(this.websocket) {
                 this.websocket.unsubscribe();
@@ -524,9 +507,6 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
         });
       });
     } catch(err) {
-      if(interval)
-        clearInterval(interval);
-
       this.loadingData = false;
       //this.infoLabel = JSON.stringify(err);
     }
@@ -609,21 +589,26 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
     }
   }
 
-  async handleScanEvent(event:any) {
-    let qrResult = JSON.parse(event.data);
+  async handleOverlayEvent(event:any) {
+    let eventData = JSON.parse(event.data);
 
-    if(qrResult && qrResult.method == "scanQr" ) {
-      if(qrResult.reason == "SCANNED" && isValidXRPAddress(qrResult.qrContents)) {
-        this.destinationInput = qrResult.qrContents;
-        await this.checkChanges(true);
-        this.loadingData = false;
-      } else if(qrResult.reason == "USER_CLOSE") {
-        //do not do anything on user close
-        this.loadingData = false;
-      } else {
-        this.destinationInput = null;
-        this.snackBar.open("Invalid XRPL account", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
-        await this.checkChanges();
+    if(eventData) {
+      if(eventData.method == "scanQr") {
+        if(eventData.reason == "SCANNED" && isValidXRPAddress(eventData.qrContents)) {
+          this.destinationInput = eventData.qrContents;
+          await this.checkChanges(true);
+          this.loadingData = false;
+        } else if(eventData.reason == "USER_CLOSE") {
+          //do not do anything on user close
+          this.loadingData = false;
+        } else {
+          this.destinationInput = null;
+          this.snackBar.open("Invalid XRPL account", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
+          await this.checkChanges();
+          this.loadingData = false;
+        }
+      } else if(eventData.method == "payloadResolved" && eventData.reason == "DECLINED") {
+        //user closed without signing
         this.loadingData = false;
       }
     }
@@ -835,7 +820,8 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
   close() {
     if (typeof window.ReactNativeWebView !== 'undefined') {
       window.ReactNativeWebView.postMessage(JSON.stringify({
-        command: 'close'
+        command: 'close',
+        refreshEvents: 'true'
       }));
     }
   }
