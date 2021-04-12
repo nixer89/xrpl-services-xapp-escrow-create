@@ -84,12 +84,10 @@
             </mat-form-field>
           </form>
 
-          <div fxLayout="row" fxLayoutGap="1em" fxLayoutAlign="start center">
+          <div fxLayout="column" fxLayoutGap="1em" fxLayoutAlign="start start">
             <label class="xumm-grey">Alternatively:</label>
-            <div fxLayout="column" fxLayoutGap="0.5em" fxLayoutAlign="center start">
-              <button mat-raised-button color="primary" (click)="signInForDestination()" [disabled]="loadingData">Choose from XUMM&nbsp;<mat-icon>login</mat-icon></button>
-              <button mat-raised-button color="primary" (click)="scanForDestination()" [disabled]="loadingData">Scan QR&nbsp;<mat-icon>qr_code_scanner</mat-icon></button>
-            </div>
+            <button mat-raised-button color="primary" (click)="signInForDestination()" [disabled]="loadingData">Choose from XUMM&nbsp;<mat-icon>login</mat-icon></button>
+            <button mat-raised-button color="primary" (click)="scanForDestination()" [disabled]="loadingData">Scan QR&nbsp;<mat-icon>qr_code_scanner</mat-icon></button>
           </div>
 
           <div *ngIf="validAddress && !loadingData">
