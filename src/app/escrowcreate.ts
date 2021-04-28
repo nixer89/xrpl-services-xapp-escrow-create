@@ -810,7 +810,9 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
         if(expectedRelease.getTime() < Date.now())
             expectedRelease.setTime(Date.now());
 
-        expectedRelease.setHours(expectedRelease.getHours()+1);
+        if(expectedRelease.getMinutes() >= 4 && expectedRelease.getMinutes() <= 59)
+          expectedRelease.setHours(expectedRelease.getHours()+1);
+
         expectedRelease.setMinutes(5,0,0);
         return expectedRelease.toLocaleString();
     } else
