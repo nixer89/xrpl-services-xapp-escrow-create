@@ -42,9 +42,6 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
   @ViewChild('inpfinishaftertime') inpfinishaftertime;
   finishafterTimeInput: string;
 
-  @ViewChild('inppassword') password;
-  passwordInput: string;
-
   @ViewChild('escrowStepper') stepper: MatStepper;
 
   @Input()
@@ -69,7 +66,6 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
   validAddress:boolean = false;
   validCancelAfter:boolean = false;
   validFinishAfter:boolean = false;
-  validCondition:boolean = false;
 
   cancelAfterDateTime:Date;
   finishAfterDateTime:Date;
@@ -84,8 +80,6 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
   dateTimePickerSupported:boolean = true;
 
   loadingData:boolean = false;
-
-  hidePw = true;
 
   createdEscrow:any = {}
   escrowReleaseData: any = {};
@@ -257,37 +251,39 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
 
     this.oldDestinationInput = this.destinationInput;
 
-    this.validCondition = this.passwordInput && this.passwordInput.trim().length > 0;
 
     this.validatingEscrow = true;
 
     this.isValidEscrow = true;
     //check some fields first
+    if(!this.validAddress || !this.validAmount)
+      this.isValidEscrow = false;
+
     if(this.isFinishAfterDateSet() && !this.finishafterTimeInput)
       this.isValidEscrow = false;
 
     if(this.finishafterTimeInput && !this.validFinishAfter)
       this.isValidEscrow = false;
 
+    if(this.validFinishAfter && this.finishDateInFuture)
+      this.isValidEscrow = false;
+
     if(this.isCancelAfterDateSet() && !this.cancelafterTimeInput)
       this.isValidEscrow = false;
 
-    if(this.isValidEscrow && this.cancelafterTimeInput && !this.validCancelAfter)
+    if(this.cancelafterTimeInput && !this.validCancelAfter)
       this.isValidEscrow = false;
 
-    if(this.isValidEscrow && this.validAmount && this.validAddress && (this.validFinishAfter || this.validCondition)) {
-      if(this.validCondition && !this.validFinishAfter && !this.validCancelAfter)
-        this.isValidEscrow = false
-    }
-    else
+    if(this.validCancelAfter && this.cancelDateInFuture)
       this.isValidEscrow = false;
-
-    if(this.isValidEscrow && this.validFinishAfter && this.validCancelAfter) {
-      if(this.cancelDateBeforeFinishDate || this.cancelDateInFuture || this.finishDateInFuture)
+      
+    if(this.validFinishAfter && this.validCancelAfter && this.cancelDateBeforeFinishDate)
         this.isValidEscrow = false
-    }
 
     if(this.escrowYears > 10 && !this.checkBoxYears)
+      this.isValidEscrow = false;
+
+    if(!this.validFinishAfter && !this.validCancelAfter)
       this.isValidEscrow = false;
 
     this.validatingEscrow = false;
@@ -361,61 +357,19 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
         xummPayload.custom_meta.instruction += "\n- Finish After (UTC): " + this.finishAfterDateTime.toUTCString();
       }
 
-      if(this.validCondition) {
-        let fulfillment_bytes:Buffer = Buffer.from(this.passwordInput.trim(), 'utf-8');
-
-        
-        import('five-bells-condition').then( async cryptoCondition => {
-          let myFulfillment = new cryptoCondition.PreimageSha256();
-
-          myFulfillment.setPreimage(fulfillment_bytes);
-
-          //console.log('Fulfillment: ', fulfillment)
-          //console.log('             ', myFulfillment.serializeUri())
-
-          var condition = myFulfillment.getConditionBinary().toString('hex').toUpperCase()
-          //console.log('Condition  : ', condition)
-            // 'A0258020' + sha256(fulfillment_bytes) + '810102'
-          //console.log('             ', myFulfillment.getCondition().serializeUri())
-
-          //console.log()
-
-          //console.log(
-          //  'Fulfillment valid for Condition?      ',
-          //    cryptoCondition.validateFulfillment(
-          //    cryptoCondition.Fulfillment.fromBinary(Buffer.from(fulfillment, 'hex')).serializeUri(), 
-          //    cryptoCondition.Condition.fromBinary(Buffer.from(condition, 'hex')).serializeUri()
-          //  )
-          //)
-
-          xummPayload.txjson.Condition = condition;
-          xummPayload.custom_meta.instruction += "\n- With a password ✓";
-
-          let backendRequest: GenericBackendPostRequest = {
-            options: {
-              web: false,
-              xrplAccount: this.originalAccountInfo.Account
-            },
-            payload: xummPayload
-          }
-
-          let message = await this.waitForTransactionSigning(backendRequest);
-          await this.handleEscrowCreateMessage(message);
-          this.loadingData = false;
-        });      
-      } else {
-        let backendRequest: GenericBackendPostRequest = {
-          options: {
-            web: false,
-            xrplAccount: this.originalAccountInfo.Account
-          },
-          payload: xummPayload
-        }
-
-        let message = await this.waitForTransactionSigning(backendRequest);
-        await this.handleEscrowCreateMessage(message);
-        this.loadingData = false;
+          
+      let backendRequest: GenericBackendPostRequest = {
+        options: {
+          web: false,
+          xrplAccount: this.originalAccountInfo.Account
+        },
+        payload: xummPayload
       }
+
+      let message = await this.waitForTransactionSigning(backendRequest);
+      await this.handleEscrowCreateMessage(message);
+      this.loadingData = false;
+
     } catch(err) {
       this.handleError(err);
       this.loadingData = false;
@@ -660,7 +614,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
   }
 
   clearInputs() {
-    this.destinationInput = this.amountInput = this.passwordInput = null;
+    this.destinationInput = this.amountInput = null;
     this.finishAfterFormCtrl.reset();
     this.cancelAfterFormCtrl.reset();
     this.cancelafterTimeInput = this.cancelAfterDateTime = null;
@@ -668,7 +622,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
 
     this.cancelDateInFuture =  this.finishDateInFuture = this.cancelDateBeforeFinishDate = false;
 
-    this.isValidEscrow = this.validAddress = this.validAmount = this.validCancelAfter = this.validFinishAfter = this.validCondition = false;
+    this.isValidEscrow = this.validAddress = this.validAmount = this.validCancelAfter = this.validFinishAfter = false;
   }
 
   async loadAccountData(xrplAccount: string) {

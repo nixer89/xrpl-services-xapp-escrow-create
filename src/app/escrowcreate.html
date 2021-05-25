@@ -205,27 +205,14 @@
               <mat-card class="mat-card-red" *ngIf="isCancelAfterDateSet() && !cancelafterTimeInput">You have set a date. Please also set a time!</mat-card>
               <mat-card class="mat-card-red" *ngIf="validCancelAfter && !cancelDateInFuture && cancelDateBeforeFinishDate">Cancel After needs to be after Finish After.</mat-card>
               <mat-card class="mat-card-red" *ngIf="validCancelAfter && !cancelDateInFuture && !cancelDateBeforeFinishDate" class="xumm-grey">UTC time: <b>{{cancelAfterDateTime.toUTCString()}}</b></mat-card>
-
-              <form fxLayout="column" fxLayoutGap="0.5em">
-                <mat-form-field>
-                  <input #inppassword matInput name="password" [type]="hidePw ? 'password' : 'text'" matInput placeholder="Password to secure your escrow (optional)" [(ngModel)]="passwordInput" (ngModelChange)="checkChanges()">
-                  <mat-hint style="color: orangered;">Optional, but if set, you need this password to execute the Escrow Finish transaction!</mat-hint>
-                  <button mat-icon-button matSuffix (click)="hidePw = !hidePw" [attr.aria-label]="'Hide password'" [attr.aria-pressed]="hidePw">
-                    <mat-icon>{{hidePw ? 'visibility_off' : 'visibility'}}</mat-icon>
-                  </button>
-                </mat-form-field>
-              </form>
             </div>
           </mat-expansion-panel>
 
           <div style="padding-top: 0.5em;">
-            <mat-card *ngIf="validAddress && validAmount && (!validFinishAfter && !validCondition)" class="mat-card-orange">
+            <mat-card *ngIf="validAddress && validAmount && !isCancelAfterDateSet() && !isFinishAfterDateSet()" class="mat-card-orange">
               <label>Please provide a Finish After time.</label>
             </mat-card>
-            <mat-card *ngIf="validAddress && validAmount &&  validCondition && (!validFinishAfter && !validCancelAfter)" class="mat-card-orange">
-              <label>Please provide a Finish After or Cancel After time.</label>
-            </mat-card>
-
+            
             <div *ngIf="loadingData" fxLayoutAlign="center center">
               <label>Preparing your Escrow...</label>
               <mat-progress-spinner color="primary" mode="indeterminate" diameter=25></mat-progress-spinner>
