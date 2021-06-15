@@ -15,6 +15,7 @@ import { FormControl } from '@angular/forms';
 import { DateAdapter } from '@angular/material/core';
 import { TypeWriter } from './utils/TypeWriter';
 import * as clipboard from 'copy-to-clipboard';
+import { DefaultFlexOffsetDirective } from '@angular/flex-layout';
 
 @Component({
   selector: 'escrowcreate',
@@ -57,6 +58,12 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
 
   originalAccountInfo:any;
   testMode:boolean = false;
+
+  destinationTag:number = null;
+  destinationName:string = null;
+
+  xummMajorVersion:number = null;
+  xummMinorVersion:number = null;
 
   private ottReceived: Subscription;
   private themeReceived: Subscription;
@@ -116,6 +123,12 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
         if(ottData.locale)
           this.dateAdapter.setLocale(ottData.locale);
         //this.infoLabel = "changed mode to testnet: " + this.testMode;
+
+        if(ottData.version) {
+          let version:string[] = ottData.version.split('.');
+          this.xummMajorVersion = Number.parseInt(version[0]);
+          this.xummMinorVersion = Number.parseInt(version[1]);
+        }
 
         if(ottData && ottData.account && ottData.accountaccess == 'FULL') {
 
@@ -341,6 +354,11 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
         xummPayload.custom_meta.instruction += "- Escrow Destination: " + this.destinationInput.trim();
       }
 
+      if(this.destinationTag) {
+        xummPayload.txjson.DestinationTag = this.destinationTag;
+        xummPayload.custom_meta.instruction += "\n- Escrow DestinationTag: " + this.destinationTag;
+      }
+
       
       if(this.amountInput && parseFloat(this.amountInput) >= 0.000001) {
         xummPayload.txjson.Amount = parseFloat(this.amountInput)*1000000+"";
@@ -548,6 +566,8 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
 
     if(eventData) {
       if(eventData.method == "scanQr") {
+        this.infoLabel = "scanQR triggered";
+
         if(eventData.reason == "SCANNED" && isValidXRPAddress(eventData.qrContents)) {
           this.destinationInput = eventData.qrContents;
           await this.checkChanges(true);
@@ -564,7 +584,65 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
       } else if(eventData.method == "payloadResolved" && eventData.reason == "DECLINED") {
         //user closed without signing
         this.loadingData = false;
+      } else if(eventData.method == "selectDestination") {
+        if(eventData.reason == "SELECTED" && isValidXRPAddress(eventData.destination.address)) {
+          if(!eventData.info || (eventData.info && !eventData.info.blackHole && !eventData.info.disallowIncomingXRP && !eventData.info.possibleExchange && eventData.info.exist)) {
+            //all good!
+            this.destinationInput = eventData.destination.address;
+
+            if(eventData.destination.tag)
+              this.destinationTag = eventData.destination.tag;
+
+            if(eventData.destination.name)
+              this.destinationName = eventData.destination.name;
+
+            await this.checkChanges(true, true);
+            
+          } else if(eventData.info) {
+            if(eventData.info.blackHole)
+              this.snackBar.open("You can not send an Escrow to a blackhole account.", null, {panelClass: 'snackbar-failed', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
+            else if(eventData.info.disallowIncomingXRP)
+              this.snackBar.open("The destination account wished to not receive XRP.", null, {panelClass: 'snackbar-failed', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
+            else if(eventData.info.possibleExchange)
+              this.snackBar.open("The destination account is possibly an Exchange. Please choose another account.", null, {panelClass: 'snackbar-failed', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
+            else if(!eventData.info.exist)
+              this.snackBar.open("The destination account does not exist on the " + this.testMode ? "Testnet" : "Mainnet" + ".", null, {panelClass: 'snackbar-failed', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
+
+            this.destinationInput = null;
+            await this.checkChanges();
+          }
+
+          this.loadingData = false;
+        } else if(eventData.reason == "USER_CLOSE") {
+          //do not do anything on user close
+          this.loadingData = false;
+        } else {
+          this.destinationInput = null;
+          this.snackBar.open("Invalid XRPL account", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
+          await this.checkChanges();
+          this.loadingData = false;
+        }
       }
+    }
+  }
+
+  async chooseDestinationFromXumm() {
+    if(this.xummMajorVersion >= 2 && this.xummMinorVersion >= 1) {
+      //open new "destination selection" view
+      await this.openDestinationSelectionView();
+    } else {
+      //do old "sign in" thing
+      await this.signInForDestination();
+    }
+  }
+
+  async openDestinationSelectionView() {
+    if (typeof window.ReactNativeWebView !== 'undefined') {
+      window.ReactNativeWebView.postMessage(JSON.stringify({
+        command: 'selectDestination'
+      }));
+    } else {
+      await this.signInForDestination();
     }
   }
 
