@@ -100,8 +100,8 @@
               <label>Account does not exist on the {{testMode ? 'TestNet' : 'Mainnet'}}</label>
             </mat-card>
     
-            <mat-card *ngIf="destinationAccountExists && escrowDestinationHasDestTagEnabled" class="mat-card-red">
-              <label>The destination account requires a DestinationTag. For the safety of your funds we don't allow sending Escrows to accounts which require a DestinationTag.</label>
+            <mat-card *ngIf="destinationAccountExists && (escrowDestinationHasDestTagEnabled || destinationTag)" class="mat-card-red">
+              <label>The destination account requires a DestinationTag. For the safety of your funds we don't allow sending Escrows to accounts which require a DestinationTag. Please choose a different account.</label>
             </mat-card>
 
             <mat-card *ngIf="destinationAccountExists && !escrowDestinationSigned && !escrowDestinationHasDestTagEnabled" class="mat-card-orange">

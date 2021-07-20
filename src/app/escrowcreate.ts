@@ -15,7 +15,6 @@ import { FormControl } from '@angular/forms';
 import { DateAdapter } from '@angular/material/core';
 import { TypeWriter } from './utils/TypeWriter';
 import * as clipboard from 'copy-to-clipboard';
-import { DefaultFlexOffsetDirective } from '@angular/flex-layout';
 
 @Component({
   selector: 'escrowcreate',
@@ -333,6 +332,10 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
   }
 
   async sendPayloadToXumm() {
+
+    if(this.destinationTag)
+      return;
+
     this.loadingData = true;
     //this.infoLabel = "sending payload";
     try {
@@ -353,12 +356,6 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
         xummPayload.txjson.Destination = this.destinationInput.trim();
         xummPayload.custom_meta.instruction += "- Escrow Destination: " + this.destinationInput.trim();
       }
-
-      if(this.destinationTag) {
-        xummPayload.txjson.DestinationTag = this.destinationTag;
-        xummPayload.custom_meta.instruction += "\n- Escrow DestinationTag: " + this.destinationTag;
-      }
-
       
       if(this.amountInput && parseFloat(this.amountInput) >= 0.000001) {
         xummPayload.txjson.Amount = parseFloat(this.amountInput)*1000000+"";
@@ -566,7 +563,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
 
     if(eventData) {
       if(eventData.method == "scanQr") {
-        this.infoLabel = "scanQR triggered";
+        this.infoLabel = "scanQR triggered" + JSON.stringify(eventData);
 
         if(eventData.reason == "SCANNED" && isValidXRPAddress(eventData.qrContents)) {
           this.destinationInput = eventData.qrContents;
@@ -585,17 +582,14 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
         //user closed without signing
         this.loadingData = false;
       } else if(eventData.method == "selectDestination") {
+        this.infoLabel = "selectDestination triggered: " + JSON.stringify(eventData);
         if(eventData.reason == "SELECTED" && isValidXRPAddress(eventData.destination.address)) {
           if(!eventData.info || (eventData.info && !eventData.info.blackHole && !eventData.info.disallowIncomingXRP && !eventData.info.possibleExchange && eventData.info.exist)) {
             //all good!
             this.destinationInput = eventData.destination.address;
-
-            if(eventData.destination.tag)
-              this.destinationTag = eventData.destination.tag;
-
-            if(eventData.destination.name)
-              this.destinationName = eventData.destination.name;
-
+            this.destinationTag = eventData.destination.tag;
+            this.destinationName = eventData.destination.name;
+            
             await this.checkChanges(true, true);
             
           } else if(eventData.info) {
@@ -606,9 +600,11 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
             else if(eventData.info.possibleExchange)
               this.snackBar.open("The destination account is possibly an Exchange. Please choose another account.", null, {panelClass: 'snackbar-failed', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
             else if(!eventData.info.exist)
-              this.snackBar.open("The destination account does not exist on the " + this.testMode ? "Testnet" : "Mainnet" + ".", null, {panelClass: 'snackbar-failed', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
+              this.snackBar.open("The destination account does not exist on the " + (this.testMode ? "Testnet" : "Mainnet") + ".", null, {panelClass: 'snackbar-failed', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
 
             this.destinationInput = null;
+            this.destinationTag = null;
+            this.destinationName = null;
             await this.checkChanges();
           }
 
@@ -627,6 +623,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
   }
 
   async chooseDestinationFromXumm() {
+    this.loadingData = true;
     if(this.xummMajorVersion >= 2 && this.xummMinorVersion >= 1) {
       //open new "destination selection" view
       await this.openDestinationSelectionView();
@@ -676,6 +673,8 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
 
         if(transactionResult && transactionResult.success) {
           this.destinationInput = transactionResult.account;
+          this.destinationName = null;
+          this.destinationTag = null;
           this.snackBar.open("Destination account inserted!", null, {panelClass: 'snackbar-success', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
           await this.checkChanges(true, true);
         } else {
