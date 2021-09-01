@@ -156,7 +156,7 @@
       <mat-card fxLayout="column" fxLayoutGap="0.5em">
           <ng-template matStepLabel>Escrow Details</ng-template>
           <label>Finish After time</label>
-          <label class="description">Please define a time your Escrow can be finished earliest. If you do not provide this date then you have to define a CancelAfter time or condition.</label>
+          <label class="description">Please define a time your Escrow can be finished earliest. If you do not provide this date then you have to define a CancelAfter time.</label>
           <form fxLayout="column" fxLayoutGap="0.5em" style="padding-top: 1em;">
             <mat-form-field>
               <mat-label>Choose a date</mat-label>
@@ -245,7 +245,6 @@
             <label class="description">You Escrow can not be added to the Escrow Releaser service since it does not fulfill the requirements.</label>
             <label>Requirements are:</label>
             <label> - FinishAfter time set</label>
-            <label> - no Condition (Password)</label>
             <label> - no CancelAfter or CancelAfter > 90min past FinishAfter</label>
           </div>
           <div *ngIf="isAbleToAutoRelease() && !autoReleaseActivated" fxLayout="column" fxLayoutGap="0.5em">
