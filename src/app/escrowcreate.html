@@ -26,7 +26,7 @@
           <ng-template matStepLabel>Description</ng-template>
           <a href="https://xrpl.org/escrowcreate.html" rel="noreferrer">Escrow Create Documentation</a><br/>
           <label>Sequester XRP until the escrow process either finishes or is canceled.</label>
-          <label>Every Escrow will add 5 XRP to your account reserve. The 5 XRP are back available when the Escrow is finished/canceled.</label>
+          <label>Every Escrow will add {{ownerReserve/1000000}} XRP to your account reserve. The {{ownerReserve/1000000}} XRP are back available when the Escrow is finished/canceled.</label>
           <mat-card class="mat-card-red" style="padding-top: 1em;">
             Be careful! You could lock away your funds for years!
           </mat-card>
@@ -137,7 +137,7 @@
           </form>
 
           <mat-card *ngIf="amountInput && !validAmount && escrowBiggerThanAvailable()" class="mat-card-red">
-            <label>Your escrow amount is too big. Max amount is: {{getAvailableBalanceForEscrow()}} XRP. ('Available Balance' minus 5 XRP for account reserve) <a href="https://xrpl.org/reserves.html#owner-reserves" target="_blank"> (Reserve Info)</a></label>
+            <label>Your escrow amount is too big. Max amount is: {{getAvailableBalanceForEscrow()}} XRP. ('Available Balance' minus {{ownerReserve/1000000}} XRP for account reserve) <a href="https://xrpl.org/reserves.html#owner-reserves" target="_blank"> (Reserve Info)</a></label>
           </mat-card>
 
           <div *ngIf="loadingData" fxLayoutAlign="center center">

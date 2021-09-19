@@ -109,9 +109,14 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
 
   errorLabel:string = null;
 
+  accountReserve:number = 10000000;
+  ownerReserve:number = 2000000;
+
   ngOnInit() {
     this.ottReceived = this.ottChanged.subscribe(async ottData => {
       //console.log("ottReceived: " + JSON.stringify(ottData));
+
+      this.loadFeeReserves();
 
       if(ottData) {
 
@@ -186,6 +191,21 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
 
     if(this.themeReceived)
       this.themeReceived.unsubscribe();
+  }
+
+  async loadFeeReserves() {
+    let fee_request:any = {
+      command: "ledger_entry",
+      index: "4BC50C9B0D8515D3EAAE1E74B29A95804346C491EE1A95BF25E4AAB854A6A651",
+      ledger_index: "validated"
+    }
+
+    let feeSetting:any = await this.xrplWebSocket.getWebsocketMessage("fee-settings", fee_request, this.testMode);
+    this.accountReserve = feeSetting?.result?.node["ReserveBase"];
+    this.ownerReserve = feeSetting?.result?.node["ReserveIncrement"];
+
+    console.log("resolved accountReserve: " + this.accountReserve);
+    console.log("resolved ownerReserve: " + this.ownerReserve);
   }
 
   async checkChanges(insertedDestinationAccount?: boolean, userHasSignedInDestination?: boolean) {
@@ -484,9 +504,9 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
   getAvailableBalanceForEscrow(): number {
     if(this.originalAccountInfo && this.originalAccountInfo.Balance) {
       let balance:number = Number(this.originalAccountInfo.Balance);
-      balance = balance - (20*1000000); //deduct acc reserve
-      balance = balance - (this.originalAccountInfo.OwnerCount * 5 * 1000000); //deduct owner count
-      balance = balance - 5 * 1000000; //deduct account reserve for escrow
+      balance = balance - this.accountReserve; //deduct acc reserve
+      balance = balance - this.originalAccountInfo.OwnerCount * this.ownerReserve; //deduct owner count
+      balance = balance - this.ownerReserve; //deduct account reserve for escrow
       balance = balance/1000000;
 
       if(balance >= 0.000001)
