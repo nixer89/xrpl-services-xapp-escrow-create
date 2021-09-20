@@ -579,66 +579,72 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
   }
 
   async handleOverlayEvent(event:any) {
-    let eventData = JSON.parse(event.data);
+    try {
+      if(event && event.data) {
+        let eventData = JSON.parse(event.data);
 
-    if(eventData) {
-      if(eventData.method == "scanQr") {
-        this.infoLabel = "scanQR triggered" + JSON.stringify(eventData);
+        if(eventData) {
+          if(eventData.method == "scanQr") {
+            this.infoLabel = "scanQR triggered" + JSON.stringify(eventData);
 
-        if(eventData.reason == "SCANNED" && isValidXRPAddress(eventData.qrContents)) {
-          this.destinationInput = eventData.qrContents;
-          await this.checkChanges(true);
-          this.loadingData = false;
-        } else if(eventData.reason == "USER_CLOSE") {
-          //do not do anything on user close
-          this.loadingData = false;
-        } else {
-          this.destinationInput = null;
-          this.snackBar.open("Invalid XRPL account", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
-          await this.checkChanges();
-          this.loadingData = false;
-        }
-      } else if(eventData.method == "payloadResolved" && eventData.reason == "DECLINED") {
-        //user closed without signing
-        this.loadingData = false;
-      } else if(eventData.method == "selectDestination") {
-        this.infoLabel = "selectDestination triggered: " + JSON.stringify(eventData);
-        if(eventData.reason == "SELECTED" && isValidXRPAddress(eventData.destination.address)) {
-          if(!eventData.info || (eventData.info && !eventData.info.blackHole && !eventData.info.disallowIncomingXRP && !eventData.info.possibleExchange && eventData.info.exist)) {
-            //all good!
-            this.destinationInput = eventData.destination.address;
-            this.destinationTag = eventData.destination.tag;
-            this.destinationName = eventData.destination.name;
-            
-            await this.checkChanges(true, true);
-            
-          } else if(eventData.info) {
-            if(eventData.info.blackHole)
-              this.snackBar.open("You can not send an Escrow to a blackhole account.", null, {panelClass: 'snackbar-failed', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
-            else if(eventData.info.disallowIncomingXRP)
-              this.snackBar.open("The destination account wished to not receive XRP.", null, {panelClass: 'snackbar-failed', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
-            else if(eventData.info.possibleExchange)
-              this.snackBar.open("The destination account is possibly an Exchange. Please choose another account.", null, {panelClass: 'snackbar-failed', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
-            else if(!eventData.info.exist)
-              this.snackBar.open("The destination account does not exist on the " + (this.testMode ? "Testnet" : "Mainnet") + ".", null, {panelClass: 'snackbar-failed', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
+            if(eventData.reason == "SCANNED" && isValidXRPAddress(eventData.qrContents)) {
+              this.destinationInput = eventData.qrContents;
+              await this.checkChanges(true);
+              this.loadingData = false;
+            } else if(eventData.reason == "USER_CLOSE") {
+              //do not do anything on user close
+              this.loadingData = false;
+            } else {
+              this.destinationInput = null;
+              this.snackBar.open("Invalid XRPL account", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
+              await this.checkChanges();
+              this.loadingData = false;
+            }
+          } else if(eventData.method == "payloadResolved" && eventData.reason == "DECLINED") {
+            //user closed without signing
+            this.loadingData = false;
+          } else if(eventData.method == "selectDestination") {
+            this.infoLabel = "selectDestination triggered: " + JSON.stringify(eventData);
+            if(eventData.reason == "SELECTED" && isValidXRPAddress(eventData.destination.address)) {
+              if(!eventData.info || (eventData.info && !eventData.info.blackHole && !eventData.info.disallowIncomingXRP && !eventData.info.possibleExchange && eventData.info.exist)) {
+                //all good!
+                this.destinationInput = eventData.destination.address;
+                this.destinationTag = eventData.destination.tag;
+                this.destinationName = eventData.destination.name;
+                
+                await this.checkChanges(true, true);
+                
+              } else if(eventData.info) {
+                if(eventData.info.blackHole)
+                  this.snackBar.open("You can not send an Escrow to a blackhole account.", null, {panelClass: 'snackbar-failed', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
+                else if(eventData.info.disallowIncomingXRP)
+                  this.snackBar.open("The destination account wished to not receive XRP.", null, {panelClass: 'snackbar-failed', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
+                else if(eventData.info.possibleExchange)
+                  this.snackBar.open("The destination account is possibly an Exchange. Please choose another account.", null, {panelClass: 'snackbar-failed', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
+                else if(!eventData.info.exist)
+                  this.snackBar.open("The destination account does not exist on the " + (this.testMode ? "Testnet" : "Mainnet") + ".", null, {panelClass: 'snackbar-failed', duration: 5000, horizontalPosition: 'center', verticalPosition: 'top'});
 
-            this.destinationInput = null;
-            this.destinationTag = null;
-            this.destinationName = null;
-            await this.checkChanges();
+                this.destinationInput = null;
+                this.destinationTag = null;
+                this.destinationName = null;
+                await this.checkChanges();
+              }
+
+              this.loadingData = false;
+            } else if(eventData.reason == "USER_CLOSE") {
+              //do not do anything on user close
+              this.loadingData = false;
+            } else {
+              this.destinationInput = null;
+              this.snackBar.open("Invalid XRPL account", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
+              await this.checkChanges();
+              this.loadingData = false;
+            }
           }
-
-          this.loadingData = false;
-        } else if(eventData.reason == "USER_CLOSE") {
-          //do not do anything on user close
-          this.loadingData = false;
-        } else {
-          this.destinationInput = null;
-          this.snackBar.open("Invalid XRPL account", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
-          await this.checkChanges();
-          this.loadingData = false;
         }
       }
+    } catch(err) {
+      //ignore error for now?
     }
   }
 
