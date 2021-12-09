@@ -112,6 +112,8 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
   accountReserve:number = 10000000;
   ownerReserve:number = 2000000;
 
+  termsAndConditions:boolean = false;
+
   ngOnInit() {
     this.ottReceived = this.ottChanged.subscribe(async ottData => {
       //console.log("ottReceived: " + JSON.stringify(ottData));
@@ -878,6 +880,26 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
         return expectedRelease.toLocaleString();
     } else
         return "-";
+  }
+
+  openTermsAndConditions() {
+    if (typeof window.ReactNativeWebView !== 'undefined') {
+      //this.infoLabel = "opening sign request";
+      window.ReactNativeWebView.postMessage(JSON.stringify({
+        command: "openBrowser",
+        url: "https://xrpl.services/terms"
+      }));
+    }
+  }
+
+  openPrivacyPolicy() {
+    if (typeof window.ReactNativeWebView !== 'undefined') {
+      //this.infoLabel = "opening sign request";
+      window.ReactNativeWebView.postMessage(JSON.stringify({
+        command: "openBrowser",
+        url: "https://xrpl.services/privacy"
+      }));
+    }
   }
 
   close() {
