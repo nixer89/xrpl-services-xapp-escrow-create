@@ -25,7 +25,7 @@ module.exports = function (config) {
       suppressAll: true // removes the duplicated traces
     },
     coverageReporter: {
-      dir: require('path').join(__dirname, './coverage/xumm-xapp-escrow-create'),
+      dir: require('path').join(__dirname, './coverage/xrpl-services-xapp-escrow-create'),
       subdir: '.',
       reporters: [
         { type: 'html' },

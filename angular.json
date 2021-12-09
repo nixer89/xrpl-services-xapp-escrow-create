@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "xumm-xapp-escrow-create": {
+    "xrpl-services-xapp-escrow-create": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -13,7 +13,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "dist/xumm-xapp-escrow-create",
+            "outputPath": "dist/xrpl-services-xapp-escrow-create",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": "src/polyfills.ts",
@@ -68,18 +68,18 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "xumm-xapp-escrow-create:build"
+            "browserTarget": "xrpl-services-xapp-escrow-create:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "xumm-xapp-escrow-create:build:production"
+              "browserTarget": "xrpl-services-xapp-escrow-create:build:production"
             }
           }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "xumm-xapp-escrow-create:build"
+            "browserTarget": "xrpl-services-xapp-escrow-create:build"
           }
         },
         "test": {
@@ -117,16 +117,16 @@
           "builder": "@angular-devkit/build-angular:protractor",
           "options": {
             "protractorConfig": "e2e/protractor.conf.js",
-            "devServerTarget": "xumm-xapp-escrow-create:serve"
+            "devServerTarget": "xrpl-services-xapp-escrow-create:serve"
           },
           "configurations": {
             "production": {
-              "devServerTarget": "xumm-xapp-escrow-create:serve:production"
+              "devServerTarget": "xrpl-services-xapp-escrow-create:serve:production"
             }
           }
         }
       }
     }
   },
-  "defaultProject": "xumm-xapp-escrow-create"
+  "defaultProject": "xrpl-services-xapp-escrow-create"
 }

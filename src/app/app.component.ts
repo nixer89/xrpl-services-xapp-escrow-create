@@ -10,7 +10,7 @@ import { OverlayContainer } from '@angular/cdk/overlay';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit {
-  title = 'xumm-xapp-escrow-create';
+  title = 'xrpl-services-xapp-escrow-create';
   themeClass:string = "dark-theme";
   backgroundColor: string = "#000000";
   

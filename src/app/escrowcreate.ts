@@ -101,7 +101,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
 
   oldDestinationInput:string = null;
 
-  title: string = "Xumm Community xApp";
+  title: string = "XRPL Services xApp";
   tw: TypeWriter
 
   themeClass = 'dark-theme';
@@ -175,7 +175,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
       document.addEventListener("message", event => this.handleOverlayEvent(event));
     }
 
-    this.tw = new TypeWriter(["Xumm Community xApp", "created by nixerFFM", "Xumm Community xApp"], t => {
+    this.tw = new TypeWriter(["XRPL Services xApp", "created by nixerFFM", "XRPL Services xApp"], t => {
       this.title = t;
     })
 
@@ -821,7 +821,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
           txjson: {
               TransactionType: "Payment",
               Account: this.createdEscrow.Account,
-              Memos : [{Memo: {MemoType: Buffer.from("[https://xumm.community]-Memo", 'utf8').toString('hex').toUpperCase(), MemoData: Buffer.from("Payment for Auto Release of Escrow via xApp! Owner:" + this.createdEscrow.Account + " Sequence: " + this.createdEscrow.Sequence, 'utf8').toString('hex').toUpperCase()}}]
+              Memos : [{Memo: {MemoType: Buffer.from("[https://xrpl.services]-Memo", 'utf8').toString('hex').toUpperCase(), MemoData: Buffer.from("Payment for Auto Release of Escrow via xApp! Owner:" + this.createdEscrow.Account + " Sequence: " + this.createdEscrow.Sequence, 'utf8').toString('hex').toUpperCase()}}]
           },
           custom_meta: {
               instruction: "SIGN WITH ESCROW OWNER ACCOUNT!!!\n\nEnable Auto Release for Escrow!\n\nEscrow-Owner: " + this.createdEscrow.Account + "\nSequence: " + this.createdEscrow.Sequence + "\nFinishAfter: " + new Date(normalizer.rippleEpocheTimeToUTC(this.createdEscrow.FinishAfter)).toLocaleString(),
