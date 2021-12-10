@@ -554,12 +554,12 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
 
         if(transactionResult && transactionResult.success) {
           await this.loadAccountData(transactionResult.account);
-          this.snackBar.open("Sign In successfull", null, {panelClass: 'snackbar-success', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
+          this.snackBar.open("Sign In successful", null, {panelClass: 'snackbar-success', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
         } else {
-          this.snackBar.open("SignIn not successfull!", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
+          this.snackBar.open("SignIn not successful!", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
         }
       } else {
-        this.snackBar.open("SignIn not successfull!", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
+        this.snackBar.open("SignIn not successful!", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
       }
     } catch(err) {
       this.handleError(err);
@@ -709,10 +709,10 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
           this.snackBar.open("Destination account inserted!", null, {panelClass: 'snackbar-success', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
           await this.checkChanges(true, true);
         } else {
-          this.snackBar.open("SignIn not successfull!", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
+          this.snackBar.open("SignIn not successful!", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
         }
       } else {
-        this.snackBar.open("SignIn not successfull!", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
+        this.snackBar.open("SignIn not successful!", null, {panelClass: 'snackbar-failed', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
       }
     } catch(err) {
       this.handleError(err);
