@@ -88,3 +88,47 @@ export interface IssuerVerification {
     username?: string,
     twitter?: string
 }
+
+export interface RippleState {
+    Balance: {
+        currency: string,
+        issuer: string,
+        value: string
+    },
+    Flags: number,
+    HighLimit: {
+        currency: string,
+        issuer: string,
+        value: string
+    },
+    HighNode: string,
+    LedgerEntryType: string,
+    LowLimit: {
+        currency: string,
+        issuer: string,
+        value: string
+    },
+    LowNode: string,
+    PreviousTxnID: string,
+    PreviousTxnLgrSeq: number,
+    index: string,
+    LockCount?: number,
+    LockedBalance?: {
+        currency: string,
+        issuer: string,
+        value: string
+    }
+}
+
+
+export interface SimpleTrustline {
+    issuer: string,
+    currency: string,
+    currencyShow: string,
+    balance: number,
+    balanceShow: number,
+    lockedBalance: number,
+    limit: number,
+    limitShow:number,
+    isFrozen: boolean
+}

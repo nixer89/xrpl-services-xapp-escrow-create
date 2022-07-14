@@ -78,6 +78,32 @@ body .snackbar-failed {
     font-weight: bold;
 }
 
+div.listarea {
+    // display: none;
+    ul.list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      li {
+        display: grid;
+        &:not(:last-child) {
+            border-bottom: 1px solid darken(grey, 15%);
+          }
+        grid-template-columns: auto 5rem;
+        align-items: center;
+        align-content: space-between;
+        padding: 0.5rem 0.25rem;
+        margin-bottom: 0px !important;
+        code {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          font-size: 1.1em;
+        }
+      }
+    }
+}
+
 @media (max-width:599px) {
     
     .mat-expansion-panel-header {

@@ -23,3 +23,7 @@ export function isDefaultRippleEnabled(flags:number) {
 export function isDisallowXRPEnabled(flags:number) {
     return flags && (flags & ROOT_FLAG_DISALLOW_XRP) == ROOT_FLAG_DISALLOW_XRP;
 }
+
+export function isGlobalFreezeSet(flags:number) {
+    return flags && (flags & ROOT_FLAG_GLOBAL_FREEZE) == ROOT_FLAG_GLOBAL_FREEZE;
+}

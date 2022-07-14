@@ -5,7 +5,7 @@ import { MatStepper } from '@angular/material/stepper';
 import { XummService } from './services/xumm.service';
 import { XRPLWebsocket } from './services/xrplWebSocket';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { GenericBackendPostRequest, TransactionValidation } from './utils/types';
+import { GenericBackendPostRequest, RippleState, SimpleTrustline, TransactionValidation } from './utils/types';
 import { XummTypes } from 'xumm-sdk';
 import { webSocket, WebSocketSubject} from 'rxjs/webSocket';
 import { Subscription, Observable } from 'rxjs';
@@ -15,6 +15,13 @@ import { FormControl } from '@angular/forms';
 import { DateAdapter } from '@angular/material/core';
 import { TypeWriter } from './utils/TypeWriter';
 import * as clipboard from 'copy-to-clipboard';
+
+//RippleState Flags
+const lsfLowReserve = 0x10000;
+const lsfHighReserve = 0x20000;
+
+const lsfLowFreeze = 0x400000;
+const lsfHighFreeze = 0x800000;
 
 @Component({
   selector: 'escrowcreate',
@@ -60,6 +67,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
 
   destinationTag:number = null;
   destinationName:string = null;
+  destinationHasTrustline:boolean = false;
 
   xummMajorVersion:number = null;
   xummMinorVersion:number = null;
@@ -86,9 +94,16 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
   dateTimePickerSupported:boolean = true;
 
   loadingData:boolean = false;
+  applyFilters:boolean = false;
 
   createdEscrow:any = {}
   escrowReleaseData: any = {};
+
+  existingAccountLines:RippleState[] = [];
+  simpleTrustlines:SimpleTrustline[] = [];
+  selectedToken:SimpleTrustline = null;
+  searchString:string = null;
+  issuerHasGlobalFreezeSet:boolean = false;
 
   infoLabel:string = null;
   autoReleaseActivated:boolean = false;
@@ -120,11 +135,18 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
 
       this.loadFeeReserves();
 
+      //this.testMode = true;
+      //await this.loadAccountData("rELeasERs3m4inA1UinRLTpXemqyStqzwh");
+      //await this.loadAccountData("r9N4v3cWxfh4x6yUNjxNy3DbWUgbzMBLdk");
+      //this.testMode = true;
+      //this.loadingData = false;
+      //return;
+
       if(ottData) {
 
         //this.infoLabel = JSON.stringify(ottData);
         
-        this.testMode = ottData.nodetype == 'TESTNET';
+        this.testMode = ottData.nodetype != 'MAINNET';
 
         if(ottData.locale)
           this.dateAdapter.setLocale(ottData.locale);
@@ -146,11 +168,6 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
           this.originalAccountInfo = "no account";
         }
       }
-
-      //this.testMode = true;
-      //await this.loadAccountData("rELeasERs3m4inA1UinRLTpXemqyStqzwh");
-      //await this.loadAccountData("r9N4v3cWxfh4x6yUNjxNy3DbWUgbzMBLdk");
-      //this.loadingData = false;
     });
 
     this.themeReceived = this.themeChanged.subscribe(async appStyle => {
@@ -246,7 +263,14 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
       this.cancelDateBeforeFinishDate = false;
 
     if(this.amountInput) {
-      this.validAmount = !(/[^.0-9]|\d*\.\d{7,}/.test(this.amountInput));
+      this.validAmount = /^[1-9]\d*(\.\d{1,15})?$/.test(this.amountInput);
+    }
+
+    if(this.validAmount)
+      this.validAmount = this.amountInput && !this.escrowBiggerThanAvailable();
+
+    if(this.validAmount && this.selectedToken && this.selectedToken.currency === 'XRP') {
+      this.validAmount = !(/[^.0-9]|\d*\.\d{7,}/.test(this.amountInput)) && parseFloat(this.amountInput) >= 0.000001;
 
       if(!this.validAmount) {
         this.maxSixDigits = this.amountInput.includes('.') && this.amountInput.split('.')[1].length > 6;
@@ -255,8 +279,6 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
       }
     }
 
-    if(this.validAmount)
-      this.validAmount = this.amountInput && parseFloat(this.amountInput) >= 0.000001 && !this.escrowBiggerThanAvailable();
     
     this.validAddress = this.destinationInput && this.destinationInput.trim().length > 0 && isValidXRPAddress(this.destinationInput.trim());
 
@@ -266,6 +288,10 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
       this.destinationAccountExists = await this.checkIfDestinationAccountExists(this.destinationInput);
 
       if(this.destinationAccountExists) {
+
+        await this.checkDestinationHasTrustline(this.destinationInput);
+
+        console.log("destinationHasTrustline: " + this.destinationHasTrustline);
 
         this.escrowDestinationSigned = userHasSignedInDestination;
 
@@ -371,7 +397,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
       }
 
       if(this.escrowYears > 10) {
-        xummPayload.custom_meta.instruction += "ATTENTION: Your XRP will be inaccessible for " + this.escrowYears + "years!\n\n";
+        xummPayload.custom_meta.instruction += "ATTENTION: Your " + this.selectedToken.currencyShow + " will be inaccessible for " + this.escrowYears + "years!\n\n";
       }
 
       if(this.destinationInput && this.destinationInput.trim().length>0 && isValidXRPAddress(this.destinationInput)) {
@@ -379,9 +405,18 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
         xummPayload.custom_meta.instruction += "- Escrow Destination: " + this.destinationInput.trim();
       }
       
-      if(this.amountInput && parseFloat(this.amountInput) >= 0.000001) {
-        xummPayload.txjson.Amount = parseFloat(this.amountInput)*1000000+"";
-        xummPayload.custom_meta.instruction += "\n- Escrow Amount: " + this.amountInput;
+      if(this.amountInput && this.validAmount) {
+        if(this.selectedToken && this.selectedToken.currency === 'XRP') {
+          xummPayload.txjson.Amount = parseFloat(this.amountInput)*1000000+"";
+        } else {
+          xummPayload.txjson.Amount = {
+            currency: this.selectedToken.currency,
+            issuer: this.selectedToken.issuer,
+            value: this.amountInput+""
+          }
+        }
+        
+        xummPayload.custom_meta.instruction += "\n- Escrow Amount: " + this.amountInput + " " + this.selectedToken.currencyShow;
       }
   
       if(this.validCancelAfter) {
@@ -504,7 +539,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
     }
   }
 
-  getAvailableBalanceForEscrow(): number {
+  getAvailableXrpBalanceForEscrow(): number {
     if(this.originalAccountInfo && this.originalAccountInfo.Balance) {
       let balance:number = Number(this.originalAccountInfo.Balance);
       balance = balance - this.accountReserve; //deduct acc reserve
@@ -516,7 +551,14 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
         return balance
       else
         return 0;
-      
+    } else {
+      return 0;
+    }
+  }
+
+  getAvailableBalanceForEscrow(): number {
+    if(this.selectedToken) {
+      return this.selectedToken.balanceShow;
     } else {
       return 0;
     }
@@ -737,6 +779,11 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
     //this.infoLabel = "loading " + xrplAccount;
     if(xrplAccount && isValidXRPAddress(xrplAccount)) {
       this.loadingData = true;
+
+      //get connected node
+      let server_info = { command: "server_info" };
+
+      let serverInfoResponse = await this.xrplWebSocket.getWebsocketMessage("token-trasher", server_info, this.testMode);
       
       let account_info_request:any = {
         command: "account_info",
@@ -756,6 +803,57 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
       } else {
         this.originalAccountInfo = "no account";
       }
+
+      //load account lines
+      let accountLinesCommand:any = {
+        command: "account_objects",
+        account: xrplAccount,
+        type: "state",
+        ledger_index: serverInfoResponse.result.info.validated_ledger.seq,
+        limit: 200
+      }
+
+      //console.log("starting to read account lines!")
+
+      let accountObjects = await this.xrplWebSocket.getWebsocketMessage('token-trasher', accountLinesCommand, this.testMode);
+      
+      if(accountObjects?.result?.account_objects) {
+        let trustlines = accountObjects?.result?.account_objects;
+
+        let marker = accountObjects.result.marker;
+
+        console.log("marker: " + marker);
+        console.log("LEDGER_INDEX : " + accountObjects.result.ledger_index);
+
+
+        while(marker) {
+            //console.log("marker: " + marker);
+            accountLinesCommand.marker = marker;
+            accountLinesCommand.ledger_index = accountObjects.result.ledger_index;
+
+            //await this.xrplWebSocket.getWebsocketMessage("token-trasher", server_info, this.isTestMode);
+
+            accountObjects = await this.xrplWebSocket.getWebsocketMessage('token-trasher', accountLinesCommand, this.testMode);
+
+            marker = accountObjects?.result?.marker;
+
+            if(accountObjects?.result?.account_objects) {
+                trustlines = trustlines.concat(accountObjects.result.account_objects);
+            } else {
+                marker = null;
+            }
+        }
+
+        //console.log("finished to read account lines!")
+
+        this.existingAccountLines = trustlines;
+
+        this.resetSimpleTrustlineList();
+
+      } else {
+        this.existingAccountLines = [];
+      }
+
     } else {
       this.originalAccountInfo = "no account"
     }
@@ -790,6 +888,251 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
     } else {
       return Promise.resolve(false);;
     }
+  }
+
+  async checkDestinationHasTrustline(destinationAccount:string): Promise<void> {
+    try {
+
+      if(this.selectedToken.currency === 'XRP' && this.selectedToken.issuer === 'XRP') {
+        this.destinationHasTrustline = true;
+      } else {
+
+        //console.log("loading account data...");
+        //this.infoLabel2 = "loading " + issuerAccount;
+        if(destinationAccount && isValidXRPAddress(destinationAccount)) {
+          this.loadingData = true;
+          
+          //load account lines
+          let accountLinesCommand:any = {
+            command: "account_objects",
+            account: destinationAccount,
+            type: "state",
+            limit: 200
+          }
+
+          //console.log("starting to read account lines!")
+
+          let accountObjects = await this.xrplWebSocket.getWebsocketMessage('token-trasher', accountLinesCommand, this.testMode);
+          
+          if(accountObjects?.result?.account_objects) {
+            let trustlines:RippleState[] = accountObjects?.result?.account_objects;
+
+            let marker = accountObjects.result.marker;
+
+            console.log("marker: " + marker);
+            console.log("LEDGER_INDEX : " + accountObjects.result.ledger_index);
+
+
+            while(marker) {
+                //console.log("marker: " + marker);
+                accountLinesCommand.marker = marker;
+                accountLinesCommand.ledger_index = accountObjects.result.ledger_index;
+
+                //await this.xrplWebSocket.getWebsocketMessage("token-trasher", server_info, this.isTestMode);
+
+                accountObjects = await this.xrplWebSocket.getWebsocketMessage('token-trasher', accountLinesCommand, this.testMode);
+
+                marker = accountObjects?.result?.marker;
+
+                if(accountObjects?.result?.account_objects) {
+                    trustlines = trustlines.concat(accountObjects.result.account_objects);
+                } else {
+                    marker = null;
+                }
+            }
+
+            //console.log("finished to read account lines!")
+            let simpleTrustlines:SimpleTrustline[] = this.rippleStateToSimpleTrustline(destinationAccount, trustlines);
+
+            console.log("DESTINATION TRUSTLINES:")
+            console.log(JSON.stringify(simpleTrustlines));
+            console.log("SELECTED TOKEN: " + JSON.stringify(this.selectedToken));
+
+            this.destinationHasTrustline = false;
+
+            simpleTrustlines.forEach(trustline => {
+              if(trustline.issuer === this.selectedToken.issuer && trustline.currency === this.selectedToken.currency && !trustline.isFrozen && trustline.balance < trustline.limit) {
+                this.destinationHasTrustline = true;
+                return;
+              }
+            });
+
+          } else {
+            this.destinationHasTrustline = false;
+          }
+        } else {
+          this.destinationHasTrustline = false;
+        }
+      }
+    } catch(err) {
+      this.errorLabel = err;
+      this.handleError(err);
+    }
+  }
+
+  countsTowardsReserve(line: RippleState): boolean {
+    const reserveFlag = line.HighLimit.issuer === this.originalAccountInfo.Account ? lsfHighReserve : lsfLowReserve;
+    return line.Flags && (line.Flags & reserveFlag) == reserveFlag;
+  }
+
+  isFrozen(line: RippleState): boolean {
+    const freezeFlag = line.HighLimit.issuer === this.originalAccountInfo.Account ? lsfLowFreeze : lsfHighFreeze;
+    return line.Flags && (line.Flags & freezeFlag) == freezeFlag;
+  }
+
+  async loadIssuerAccountData(issuerAccount: string) {
+    try {
+      //console.log("loading account data...");
+      //this.infoLabel2 = "loading " + issuerAccount;
+      if(issuerAccount && isValidXRPAddress(issuerAccount)) {
+        this.loadingData = true;
+        
+        let account_info_request:any = {
+          command: "account_info",
+          account: issuerAccount,
+          "strict": true,
+        }
+
+        let accInfo:any = null;
+
+        let message_acc_info:any = await this.xrplWebSocket.getWebsocketMessage("token-trasher", account_info_request, this.testMode);
+        //console.log("xrpl-transactions account info: " + JSON.stringify(message_acc_info));
+        this.infoLabel = JSON.stringify(message_acc_info);
+        if(message_acc_info && message_acc_info.status && message_acc_info.type && message_acc_info.type === 'response') {
+          if(message_acc_info.status === 'success' && message_acc_info.result && message_acc_info.result.account_data) {
+            accInfo = message_acc_info.result.account_data;
+
+            this.issuerHasGlobalFreezeSet = flagUtils.isGlobalFreezeSet(accInfo.Flags);
+
+            //console.log("issuer accInfo: " + JSON.stringify(accInfo));
+
+            this.infoLabel = JSON.stringify(accInfo);
+
+            //if account exists, check for already issued currencies
+          } else {
+            accInfo = message_acc_info;
+          }
+        } else {
+          accInfo = "no account";
+        }
+      } else {
+
+      }
+    } catch(err) {
+      this.errorLabel = err;
+      this.handleError(err);
+    }
+  }
+
+  applyFilter() {
+
+    //console.log("search string: " + this.searchString);
+
+    this.applyFilters = true;
+
+    let newSimpleTrustlines:SimpleTrustline[] = this.rippleStateToSimpleTrustline(this.originalAccountInfo.Account, this.existingAccountLines);
+    let filteredTrustlines:SimpleTrustline[] = [];
+
+    for(let i = 0; i < newSimpleTrustlines.length; i++) {
+      if(!this.searchString || this.searchString.trim().length == 0 || newSimpleTrustlines[i].currencyShow.toLocaleLowerCase().includes(this.searchString.trim().toLocaleLowerCase())) {
+        filteredTrustlines.push(newSimpleTrustlines[i]);
+      }
+    }
+
+    if(filteredTrustlines?.length > 0) {
+      filteredTrustlines = filteredTrustlines.sort((a,b) => {
+        return a.currencyShow.localeCompare(b.currencyShow);
+      });
+    }
+
+    //add XRP in case it is available
+    if(this.getAvailableXrpBalanceForEscrow() > 0) {
+      filteredTrustlines = [{balance: this.getAvailableXrpBalanceForEscrow(), balanceShow: this.getAvailableXrpBalanceForEscrow(), currency: 'XRP', currencyShow: 'XRP', isFrozen: false, issuer: 'XRP', limit: 100000000, limitShow: 100000000, lockedBalance: 0}].concat(newSimpleTrustlines);
+    }
+
+    this.simpleTrustlines = filteredTrustlines;
+
+    this.applyFilters = false;
+  }
+
+  resetSimpleTrustlineList() {
+    this.applyFilters = true;
+
+    let newSimpleTrustlines:SimpleTrustline[] = this.rippleStateToSimpleTrustline(this.originalAccountInfo.Account, this.existingAccountLines);
+
+    if(newSimpleTrustlines?.length > 0) {
+      newSimpleTrustlines = newSimpleTrustlines.sort((a,b) => {
+        return a.currencyShow.localeCompare(b.currencyShow);
+      });
+    }
+
+    //add XRP in case it is available
+    if(this.getAvailableXrpBalanceForEscrow() > 0) {
+      newSimpleTrustlines = [{balance: this.getAvailableXrpBalanceForEscrow(), balanceShow: this.getAvailableXrpBalanceForEscrow(), currency: 'XRP', currencyShow: 'XRP', isFrozen: false, issuer: 'XRP', limit: 100000000, limitShow: 100000000, lockedBalance: 0}].concat(newSimpleTrustlines);
+    }
+
+    this.simpleTrustlines = newSimpleTrustlines;
+
+    this.applyFilters = false;
+  }
+
+  rippleStateToSimpleTrustline(queryAccount:string, rippleStates: RippleState[]): SimpleTrustline[] {
+    let newSimpleTrustlines:SimpleTrustline[] = []
+
+    for(let i = 0; i < rippleStates.length; i++) {
+      if(rippleStates[i] && this.countsTowardsReserve(rippleStates[i])) {
+        let balance = Number(rippleStates[i].Balance.value);
+
+        let lockedBalance = 0;
+
+        if(rippleStates[i].LockedBalance) {
+          lockedBalance = Number(rippleStates[i].LockedBalance.value);
+        }
+
+        let issuer:string = rippleStates[i].HighLimit.issuer === queryAccount ? rippleStates[i].LowLimit.issuer : rippleStates[i].HighLimit.issuer;
+        let currency:string = rippleStates[i].Balance.currency;
+        let currencyShow:string = normalizer.normalizeCurrencyCodeXummImpl(currency);
+        let limit:number = Number(rippleStates[i].HighLimit.issuer === queryAccount ? rippleStates[i].HighLimit.value : rippleStates[i].LowLimit.value);
+
+        if(balance < 0)
+          balance = balance * -1;
+
+        let balanceShow = normalizer.normalizeBalance(balance) - normalizer.normalizeBalance(lockedBalance);
+        let limitShow = normalizer.normalizeBalance(limit);
+        let isFrozen = this.isFrozen(rippleStates[i]);
+
+        newSimpleTrustlines.push({issuer: issuer, currency: currency, currencyShow: currencyShow, balance: balance, balanceShow: balanceShow, isFrozen: isFrozen, limit: limit, limitShow: limitShow, lockedBalance: lockedBalance});
+      }
+    }
+
+    return newSimpleTrustlines;
+  }
+
+  async selectToken(token: SimpleTrustline) {
+    this.loadingData = true;
+    try {
+      this.moveNext();
+
+      this.resetVariables();
+
+      //console.log("SELECTED: " + JSON.stringify(token));
+      this.selectedToken = token;
+      this.searchString = null;
+
+      //loading issuer data
+      await this.loadIssuerAccountData(this.selectedToken.issuer);
+
+      if(this.selectedToken.balance > 0) {
+        
+      }
+
+    } catch(err) {
+      console.log("ERROR SELECTING TOKEN");
+      console.log(JSON.stringify(err));
+      this.handleError(err);
+    }
+
+    this.loadingData = false;
   }
 
   async loadCreatedEscrowData(txId: string): Promise<void> {
@@ -954,5 +1297,11 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
       this.snackBar.dismiss();
       this.snackBar.open("Error text copied to clipboard!", null, {panelClass: 'snackbar-success', duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'});
     }
+  }
+
+  resetVariables() {
+    this.selectedToken = this.searchString = null;
+    this.issuerHasGlobalFreezeSet = false;
+    this.resetSimpleTrustlineList();
   }
 }
