@@ -20,7 +20,7 @@
   <label *ngIf="infoLabel2" style="color: red">{{infoLabel2}}</label>
   <label *ngIf="infoLabel3" style="color: red">{{infoLabel3}}</label-->
 
-  <mat-vertical-stepper linear #escrowStepper class="theme-background">
+  <mat-stepper orientation="vertical" linear #escrowStepper class="theme-background">
     <mat-step completed="false" editable="false" fxLayout="column" fxLayoutGap="0.5em">
       <mat-card fxLayout="column" fxLayoutGap="1em">
           <ng-template matStepLabel>Description</ng-template>
@@ -288,5 +288,5 @@
       </mat-card>
     </mat-step>
 
-  </mat-vertical-stepper>
+  </mat-stepper>
 </div>
