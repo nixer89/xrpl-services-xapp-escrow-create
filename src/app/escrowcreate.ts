@@ -11,7 +11,7 @@ import { webSocket, WebSocketSubject} from 'rxjs/webSocket';
 import { Subscription, Observable } from 'rxjs';
 import { OverlayContainer } from '@angular/cdk/overlay';
 import * as flagUtils from './utils/flagutils';
-import { FormControl } from '@angular/forms';
+import { UntypedFormControl } from '@angular/forms';
 import { DateAdapter } from '@angular/material/core';
 import { TypeWriter } from './utils/TypeWriter';
 import * as clipboard from 'copy-to-clipboard';
@@ -50,8 +50,8 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
   @Input()
   themeChanged: Observable<any>;
 
-  finishAfterFormCtrl:FormControl = new FormControl();
-  cancelAfterFormCtrl:FormControl = new FormControl();
+  finishAfterFormCtrl:UntypedFormControl = new UntypedFormControl();
+  cancelAfterFormCtrl:UntypedFormControl = new UntypedFormControl();
 
   websocket: WebSocketSubject<any>;
 
