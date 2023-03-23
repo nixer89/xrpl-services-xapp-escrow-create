@@ -4,7 +4,7 @@ import { isValidXRPAddress } from './utils/utils';
 import { MatStepper } from '@angular/material/stepper';
 import { XummService } from './services/xumm.service';
 import { XRPLWebsocket } from './services/xrplWebSocket';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatLegacySnackBar as MatSnackBar } from '@angular/material/legacy-snack-bar';
 import { GenericBackendPostRequest, TransactionValidation } from './utils/types';
 import { XummTypes } from 'xumm-sdk';
 import { webSocket, WebSocketSubject} from 'rxjs/webSocket';
