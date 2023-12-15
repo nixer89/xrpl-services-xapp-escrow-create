@@ -571,6 +571,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
       balance = balance - this.accountReserve; //deduct acc reserve
       balance = balance - this.originalAccountInfo.OwnerCount * this.ownerReserve; //deduct owner count
       balance = balance - this.ownerReserve; //deduct one owner reserve for the escrow
+      balance = balance - 1000; //deduct some transaction fee as quick fix
       balance = balance/1000000;
 
       console.log("AVAILABLE BALANCE: " + balance);
