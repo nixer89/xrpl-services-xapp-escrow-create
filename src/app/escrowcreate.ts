@@ -1074,7 +1074,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
       });
     }
 
-    //add XRP in case it is available
+    //add XAH in case it is available
     if(this.getAvailableXrpBalanceForEscrow() > 0) {
       filteredTrustlines = [{balance: this.getAvailableXrpBalanceForEscrow(), balanceShow: this.getAvailableXrpBalanceForEscrow(), currency: 'XAH', currencyShow: 'XAH', isFrozen: false, issuer: 'XAH', limit: 100000000, limitShow: 100000000, lockedBalance: 0}].concat(newSimpleTrustlines);
     }
