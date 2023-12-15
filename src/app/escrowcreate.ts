@@ -72,6 +72,9 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
   xummMajorVersion:number = null;
   xummMinorVersion:number = null;
 
+  force_xahau_main:string = "XAHAU";
+  force_xahau_test:string = "XAHAUTESTNET";
+
   private ottReceived: Subscription;
   private themeReceived: Subscription;
 
@@ -93,7 +96,9 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
 
   dateTimePickerSupported:boolean = true;
 
-  loadingData:boolean = false;
+  loadingData:boolean = true;
+  initializing:boolean = true;
+
   applyFilters:boolean = false;
 
   createdEscrow:any = {}
@@ -124,10 +129,12 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
 
   errorLabel:string = null;
 
-  accountReserve:number = 10000000;
-  ownerReserve:number = 2000000;
+  accountReserve:number = 1000000;
+  ownerReserve:number = 200000;
 
   termsAndConditions:boolean = false;
+
+  xummOutdated:boolean = false;
 
   ngOnInit() {
     this.ottReceived = this.ottChanged.subscribe(async ottData => {
@@ -146,7 +153,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
 
         //this.infoLabel = JSON.stringify(ottData);
         
-        this.testMode = ottData.nodetype != 'MAINNET';
+        this.testMode = ottData.nodetype == this.force_xahau_test;
 
         if(ottData.locale)
           this.dateAdapter.setLocale(ottData.locale);
@@ -158,15 +165,21 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
           this.xummMinorVersion = Number.parseInt(version[1]);
         }
 
-        if(ottData && ottData.account && ottData.accountaccess == 'FULL') {
+        if(this.xummMajorVersion < 2 || (this.xummMajorVersion == 2 && this.xummMinorVersion < 6)) {
+          this.xummOutdated = true;
+          console.log("XUMM IS OUTDATED: " + ottData.version);
+        } else if(ottData && ottData.account && ottData.accountaccess == 'FULL') {
 
           await this.loadAccountData(ottData.account);
-          this.loadingData = false;
+          
 
           //await this.loadAccountData(ottData.account); //false = ottResponse.node == 'TESTNET' 
         } else {
           this.originalAccountInfo = "no account";
         }
+
+        this.initializing = false;
+        this.loadingData = false;
       }
     });
 
@@ -220,8 +233,8 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
     }
 
     let feeSetting:any = await this.xrplWebSocket.getWebsocketMessage("fee-settings", fee_request, this.testMode);
-    this.accountReserve = feeSetting?.result?.node["ReserveBase"];
-    this.ownerReserve = feeSetting?.result?.node["ReserveIncrement"];
+    this.accountReserve = feeSetting?.result?.node["ReserveBaseDrops"];
+    this.ownerReserve = feeSetting?.result?.node["ReserveIncrementDrops"];
 
     console.log("resolved accountReserve: " + this.accountReserve);
     console.log("resolved ownerReserve: " + this.ownerReserve);
@@ -263,14 +276,22 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
       this.cancelDateBeforeFinishDate = false;
 
     if(this.amountInput) {
-      this.validAmount = /^[1-9]\d*(\.\d{1,15})?$/.test(this.amountInput);
+      this.validAmount = /^[0-9]\d*(\.\d{1,15})?$/.test(this.amountInput);
+      console.log("this.validAmount 1 : " + this.validAmount);
     }
+
+    console.log("this.escrowBiggerThanAvailable(): " + this.escrowBiggerThanAvailable());
 
     if(this.validAmount)
       this.validAmount = this.amountInput && !this.escrowBiggerThanAvailable();
 
-    if(this.validAmount && this.selectedToken && this.selectedToken.currency === 'XRP') {
+    console.log("this.validAmount 2 : " + this.validAmount);
+
+    console.log("this.selectedToken: " + JSON.stringify(this.selectedToken))
+    
+    if(this.validAmount && this.selectedToken && this.selectedToken.currency === 'XAH') {
       this.validAmount = !(/[^.0-9]|\d*\.\d{7,}/.test(this.amountInput)) && parseFloat(this.amountInput) >= 0.000001;
+      console.log("this.validAmount 3 : " + this.validAmount);
 
       if(!this.validAmount) {
         this.maxSixDigits = this.amountInput.includes('.') && this.amountInput.split('.')[1].length > 6;
@@ -278,7 +299,6 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
         this.maxSixDigits = false;
       }
     }
-
     
     this.validAddress = this.destinationInput && this.destinationInput.trim().length > 0 && isValidXRPAddress(this.destinationInput.trim());
 
@@ -390,8 +410,14 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
       let xummPayload:XummTypes.XummPostPayloadBodyJson = {
         txjson: {
           TransactionType: "EscrowCreate",
-          Account: this.originalAccountInfo.Account
-        }, custom_meta: {
+          Account: this.originalAccountInfo.Account,
+          OperationLimit: this.testMode ? 21338 : 21337
+        },
+        options: {
+          signers: [this.originalAccountInfo.Account],
+          force_network: this.testMode ? this.force_xahau_test : this.force_xahau_main
+        },
+        custom_meta: {
           instruction: ""
         }
       }
@@ -406,15 +432,15 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
       }
       
       if(this.amountInput && this.validAmount) {
-        if(this.selectedToken && this.selectedToken.currency === 'XRP') {
-          xummPayload.txjson.Amount = parseFloat(this.amountInput)*1000000+"";
+        if(this.selectedToken && this.selectedToken.currency === 'XAH') {
+          xummPayload.txjson.Amount = Math.round(parseFloat(this.amountInput)*1000000).toString();
         } else {
           xummPayload.txjson.Amount = {
             currency: this.selectedToken.currency,
             issuer: this.selectedToken.issuer,
             value: this.amountInput+""
           }
-        }
+        } 
         
         xummPayload.custom_meta.instruction += "\n- Escrow Amount: " + this.amountInput + " " + this.selectedToken.currencyShow;
       }
@@ -480,7 +506,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
     try {
         payloadRequest.payload.options = {
           expire: 2,
-          forceAccount: isValidXRPAddress(payloadRequest.payload.txjson.Account+"")
+          signers: [payloadRequest.payload.txjson.Account+""]
         }
 
         //console.log("sending xumm payload: " + JSON.stringify(xummPayload));
@@ -544,8 +570,10 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
       let balance:number = Number(this.originalAccountInfo.Balance);
       balance = balance - this.accountReserve; //deduct acc reserve
       balance = balance - this.originalAccountInfo.OwnerCount * this.ownerReserve; //deduct owner count
-      balance = balance - this.ownerReserve; //deduct account reserve for escrow
+      balance = balance - this.ownerReserve; //deduct one owner reserve for the escrow
       balance = balance/1000000;
+
+      console.log("AVAILABLE BALANCE: " + balance);
 
       if(balance >= 0.000001)
         return balance
@@ -893,7 +921,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
   async checkDestinationHasTrustline(destinationAccount:string): Promise<void> {
     try {
 
-      if(this.selectedToken.currency === 'XRP' && this.selectedToken.issuer === 'XRP') {
+      if(this.selectedToken.currency === 'XAH' && this.selectedToken.issuer === 'XAH') {
         this.destinationHasTrustline = true;
       } else {
 
@@ -1047,7 +1075,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
 
     //add XRP in case it is available
     if(this.getAvailableXrpBalanceForEscrow() > 0) {
-      filteredTrustlines = [{balance: this.getAvailableXrpBalanceForEscrow(), balanceShow: this.getAvailableXrpBalanceForEscrow(), currency: 'XRP', currencyShow: 'XRP', isFrozen: false, issuer: 'XRP', limit: 100000000, limitShow: 100000000, lockedBalance: 0}].concat(newSimpleTrustlines);
+      filteredTrustlines = [{balance: this.getAvailableXrpBalanceForEscrow(), balanceShow: this.getAvailableXrpBalanceForEscrow(), currency: 'XAH', currencyShow: 'XAH', isFrozen: false, issuer: 'XAH', limit: 100000000, limitShow: 100000000, lockedBalance: 0}].concat(newSimpleTrustlines);
     }
 
     this.simpleTrustlines = filteredTrustlines;
@@ -1068,7 +1096,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
 
     //add XRP in case it is available
     if(this.getAvailableXrpBalanceForEscrow() > 0) {
-      newSimpleTrustlines = [{balance: this.getAvailableXrpBalanceForEscrow(), balanceShow: this.getAvailableXrpBalanceForEscrow(), currency: 'XRP', currencyShow: 'XRP', isFrozen: false, issuer: 'XRP', limit: 100000000, limitShow: 100000000, lockedBalance: 0}].concat(newSimpleTrustlines);
+      newSimpleTrustlines = [{balance: this.getAvailableXrpBalanceForEscrow(), balanceShow: this.getAvailableXrpBalanceForEscrow(), currency: 'XAH', currencyShow: 'XAH', isFrozen: false, issuer: 'XAH', limit: 100000000, limitShow: 100000000, lockedBalance: 0}].concat(newSimpleTrustlines);
     }
 
     this.simpleTrustlines = newSimpleTrustlines;
@@ -1166,7 +1194,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
           txjson: {
               TransactionType: "Payment",
               Account: this.createdEscrow.Account,
-              Memos : [{Memo: {MemoType: Buffer.from("[https://xrpl.services]-Memo", 'utf8').toString('hex').toUpperCase(), MemoData: Buffer.from("Payment for Auto Release of Escrow via xApp! Owner:" + this.createdEscrow.Account + " Sequence: " + this.createdEscrow.Sequence, 'utf8').toString('hex').toUpperCase()}}]
+              Memos : [{Memo: {MemoType: Buffer.from("[https://xahau.services]-Memo", 'utf8').toString('hex').toUpperCase(), MemoData: Buffer.from("Payment for Auto Release of Escrow via xApp! Owner:" + this.createdEscrow.Account + " Sequence: " + this.createdEscrow.Sequence, 'utf8').toString('hex').toUpperCase()}}]
           },
           custom_meta: {
               instruction: "SIGN WITH ESCROW OWNER ACCOUNT!!!\n\nEnable Auto Release for Escrow!\n\nEscrow-Owner: " + this.createdEscrow.Account + "\nSequence: " + this.createdEscrow.Sequence + "\nFinishAfter: " + new Date(normalizer.rippleEpocheTimeToUTC(this.createdEscrow.FinishAfter)).toLocaleString(),
@@ -1230,7 +1258,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
       //this.infoLabel = "opening sign request";
       window.ReactNativeWebView.postMessage(JSON.stringify({
         command: "openBrowser",
-        url: "https://xrpl.services/terms"
+        url: "https://xahau.services/terms"
       }));
     }
   }
@@ -1240,7 +1268,7 @@ export class EscrowCreateComponent implements OnInit, OnDestroy {
       //this.infoLabel = "opening sign request";
       window.ReactNativeWebView.postMessage(JSON.stringify({
         command: "openBrowser",
-        url: "https://xrpl.services/privacy"
+        url: "https://xahau.services/privacy"
       }));
     }
   }

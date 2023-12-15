@@ -8,7 +8,7 @@ export class XummService {
     constructor(private app: AppService) {}
 
     isTestMode = false;
-    xummBackendURL = this.isTestMode ? 'http://localhost:4001' : 'https://hooks-testnet.xrpl.services';
+    xummBackendURL = this.isTestMode ? 'http://localhost:4001' : 'https://api.xahau.services';
 
     async submitPayload(payload:GenericBackendPostRequest): Promise<XummTypes.XummPostPayloadResponse> {
         try {

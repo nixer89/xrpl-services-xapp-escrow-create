@@ -3,12 +3,10 @@
   "version": "1.0.2",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve --port 4201 --open",
+    "start": "ng serve --port 4201 --open --disable-host-check",
     "build": "ng build --configuration production",
-    "upload": "ng build --configuration production & aws s3 --profile myevride rm s3://escrowcreate-xapp.xrpl.services/ --recursive & aws s3 --profile myevride cp ./dist/xrpl-services-xapp-escrow-create s3://escrowcreate-xapp.xrpl.services/ --recursive --include '*' --acl public-read --cache-control public,max-age=604800,no-transform",
-    "invalidate": "aws cloudfront --profile myevride create-invalidation --distribution-id E1P3V7MN50O6Z3 --paths /*",
-    "upload-test": "ng build --configuration production & aws s3 --profile myevride rm s3://escrowcreate-test-xapp.xrpl.services/ --recursive & aws s3 --profile myevride cp ./dist/xrpl-services-xapp-escrow-create s3://escrowcreate-test-xapp.xrpl.services/ --recursive --include '*' --acl public-read --cache-control public,max-age=604800,no-transform",
-    "invalidate-test": "aws cloudfront --profile myevride create-invalidation --distribution-id E2ZV0X0R539WG2 --paths /*",
+    "upload": "ng build --configuration production & aws s3 --profile myevride rm s3://escrowcreator-xapp.xahau.services/ --recursive & aws s3 --profile myevride cp ./dist/xrpl-services-xapp-escrow-create s3://escrowcreator-xapp.xahau.services/ --recursive --include '*' --acl public-read --cache-control public,max-age=604800,no-transform",
+    "invalidate": "aws cloudfront --profile myevride create-invalidation --distribution-id E2MU2LVBM7Y6LI --paths /*",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e"
@@ -33,7 +31,7 @@
     "rxjs": "^6.6.7",
     "tslib": "^2.3.0",
     "xrpl-tagged-address-codec": "^0.2.1",
-    "xumm-sdk": "^0.4.6",
+    "xumm-sdk": "^1.10.1",
     "zone.js": "~0.11.4"
   },
   "devDependencies": {
