@@ -1,4 +1,4 @@
-<div [class]="themeClass" fxFlex fxLayout="column">
+<div *ngIf="isXahauConnected" [class]="themeClass" fxFlex fxLayout="column">
   <mat-toolbar fxLayout="row" color="primary" style="background-color: #002c85;"class="mat-elevation-z4">  
     <mat-toolbar-row>
       <div fxLayout="row" fxLayoutGap="0.5em" fxLayoutAlign="start center">

@@ -31,10 +31,13 @@ const lsfHighFreeze = 0x800000;
 export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
 
   constructor(private xummService: XahauServices,
-              private xrplWebSocket: XahauWebsocket,
+              private xahauWebsocket: XahauWebsocket,
               private snackBar: MatSnackBar,
               private overlayContainer: OverlayContainer,
-              private dateAdapter: DateAdapter<any>) { }
+              private dateAdapter: DateAdapter<any>) {
+
+      console.log("XAHAU CONSTRUCTOR");
+  }
 
 
   @ViewChild('inpamount') inpamount;
@@ -135,12 +138,12 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
   termsAndConditions:boolean = false;
 
   xummOutdated:boolean = false;
+  isXahauConnected:boolean = false;
 
   ngOnInit() {
+    console.log("XAHAU NG INIT!");
     this.ottReceived = this.ottChanged.subscribe(async ottData => {
       //console.log("ottReceived: " + JSON.stringify(ottData));
-
-      this.loadFeeReserves();
 
       //this.testMode = true;
       //await this.loadAccountData("rELeasERs3m4inA1UinRLTpXemqyStqzwh");
@@ -152,34 +155,59 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
       if(ottData) {
 
         //this.infoLabel = JSON.stringify(ottData);
-        
-        this.testMode = ottData.nodetype == this.force_xahau_test;
 
-        if(ottData.locale)
-          this.dateAdapter.setLocale(ottData.locale);
-        //this.infoLabel = "changed mode to testnet: " + this.testMode;
+        this.isXahauConnected = ottData.nodetype == 'XAHAU' || ottData.nodetype == 'XAHAUTESTNET';
+        console.log("isXahauConnected: " + this.isXahauConnected);
 
-        if(ottData.version) {
-          let version:string[] = ottData.version.split('.');
-          this.xummMajorVersion = Number.parseInt(version[0]);
-          this.xummMinorVersion = Number.parseInt(version[1]);
-        }
+        if(this.isXahauConnected) { //not on XRPL, continue!
 
-        if(this.xummMajorVersion < 2 || (this.xummMajorVersion == 2 && this.xummMinorVersion < 6)) {
-          this.xummOutdated = true;
-          console.log("XUMM IS OUTDATED: " + ottData.version);
-        } else if(ottData && ottData.account && ottData.accountaccess == 'FULL') {
-
-          await this.loadAccountData(ottData.account);
+          await this.loadFeeReserves();
           
+          this.testMode = ottData.nodetype == this.force_xahau_test;
 
-          //await this.loadAccountData(ottData.account); //false = ottResponse.node == 'TESTNET' 
-        } else {
-          this.originalAccountInfo = "no account";
+          if(ottData.locale)
+            this.dateAdapter.setLocale(ottData.locale);
+          //this.infoLabel = "changed mode to testnet: " + this.testMode;
+
+          if(ottData.version) {
+            let version:string[] = ottData.version.split('.');
+            this.xummMajorVersion = Number.parseInt(version[0]);
+            this.xummMinorVersion = Number.parseInt(version[1]);
+          }
+
+          if(this.xummMajorVersion < 2 || (this.xummMajorVersion == 2 && this.xummMinorVersion < 6)) {
+            this.xummOutdated = true;
+            console.log("XUMM IS OUTDATED: " + ottData.version);
+
+          } else if(ottData && ottData.account && ottData.accountaccess == 'FULL') {
+
+            await this.loadAccountData(ottData.account);
+
+          } else {
+            this.originalAccountInfo = "no account";
+          }
+
+          //add event listeners
+          if (typeof window.addEventListener === 'function') {
+            window.addEventListener("message", event => this.handleOverlayEvent(event));
+          }
+          
+          if (typeof document.addEventListener === 'function') {
+            document.addEventListener("message", event => this.handleOverlayEvent(event));
+          }
+
+          this.tw = new TypeWriter(["Xahau Services xApp", "created by nixerFFM", "Xahau Services xApp"], t => {
+            this.title = t;
+          });
+
         }
 
         this.initializing = false;
         this.loadingData = false;
+
+        if(this.tw) {
+          this.tw.start();
+        }
       }
     });
 
@@ -197,21 +225,6 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
       this.overlayContainer.getContainerElement().classList.add(this.themeClass);
     });
     //this.infoLabel = JSON.stringify(this.device.getDeviceInfo());
-
-    //add event listeners
-    if (typeof window.addEventListener === 'function') {
-      window.addEventListener("message", event => this.handleOverlayEvent(event));
-    }
-    
-    if (typeof document.addEventListener === 'function') {
-      document.addEventListener("message", event => this.handleOverlayEvent(event));
-    }
-
-    this.tw = new TypeWriter(["XRPL Services xApp", "created by nixerFFM", "XRPL Services xApp"], t => {
-      this.title = t;
-    })
-
-    this.tw.start();
 
     //this.dateTimePickerSupported = !(this.device && this.device.getDeviceInfo() && this.device.getDeviceInfo().os_version && (this.device.getDeviceInfo().os_version.toLowerCase().includes('ios') || this.device.getDeviceInfo().browser.toLowerCase().includes('safari') || this.device.getDeviceInfo().browser.toLowerCase().includes('edge')));
     this.dateTimePickerSupported = true;
@@ -232,7 +245,7 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
       ledger_index: "validated"
     }
 
-    let feeSetting:any = await this.xrplWebSocket.getWebsocketMessage("fee-settings", fee_request, this.testMode);
+    let feeSetting:any = await this.xahauWebsocket.getWebsocketMessage("fee-settings", fee_request, this.testMode);
     this.accountReserve = feeSetting?.result?.node["ReserveBaseDrops"];
     this.ownerReserve = feeSetting?.result?.node["ReserveIncrementDrops"];
 
@@ -411,7 +424,7 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
         txjson: {
           TransactionType: "EscrowCreate",
           Account: this.originalAccountInfo.Account,
-          OperationLimit: this.testMode ? 21338 : 21337
+          NetworkID: this.testMode ? 21338 : 21337
         },
         options: {
           signers: [this.originalAccountInfo.Account],
@@ -505,8 +518,11 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
     let xummResponse:XummTypes.XummPostPayloadResponse;
     try {
         payloadRequest.payload.options = {
-          expire: 2,
-          signers: [payloadRequest.payload.txjson.Account+""]
+          expire: 2
+        }
+
+        if(payloadRequest.payload.txjson.Account) {
+          payloadRequest.payload.options.signers = [payloadRequest.payload.txjson.Account+""];
         }
 
         //console.log("sending xumm payload: " + JSON.stringify(xummPayload));
@@ -812,7 +828,7 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
       //get connected node
       let server_info = { command: "server_info" };
 
-      let serverInfoResponse = await this.xrplWebSocket.getWebsocketMessage("token-trasher", server_info, this.testMode);
+      let serverInfoResponse = await this.xahauWebsocket.getWebsocketMessage("token-trasher", server_info, this.testMode);
       
       let account_info_request:any = {
         command: "account_info",
@@ -820,7 +836,7 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
         "strict": true,
       }
 
-      let message_acc_info:any = await this.xrplWebSocket.getWebsocketMessage("xrpl-transactions", account_info_request, this.testMode);
+      let message_acc_info:any = await this.xahauWebsocket.getWebsocketMessage("xrpl-transactions", account_info_request, this.testMode);
       //console.log("xrpl-transactions account info: " + JSON.stringify(message_acc_info));
       //this.infoLabel = JSON.stringify(message_acc_info);
       if(message_acc_info && message_acc_info.status && message_acc_info.type && message_acc_info.type === 'response') {
@@ -844,7 +860,7 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
 
       //console.log("starting to read account lines!")
 
-      let accountObjects = await this.xrplWebSocket.getWebsocketMessage('token-trasher', accountLinesCommand, this.testMode);
+      let accountObjects = await this.xahauWebsocket.getWebsocketMessage('token-trasher', accountLinesCommand, this.testMode);
       
       if(accountObjects?.result?.account_objects) {
         let trustlines = accountObjects?.result?.account_objects;
@@ -862,7 +878,7 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
 
             //await this.xrplWebSocket.getWebsocketMessage("token-trasher", server_info, this.isTestMode);
 
-            accountObjects = await this.xrplWebSocket.getWebsocketMessage('token-trasher', accountLinesCommand, this.testMode);
+            accountObjects = await this.xahauWebsocket.getWebsocketMessage('token-trasher', accountLinesCommand, this.testMode);
 
             marker = accountObjects?.result?.marker;
 
@@ -897,7 +913,7 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
         "strict": true,
       }
 
-      let message_acc_info:any = await this.xrplWebSocket.getWebsocketMessage("xrpl-transactions", account_info_request, this.testMode);
+      let message_acc_info:any = await this.xahauWebsocket.getWebsocketMessage("xrpl-transactions", account_info_request, this.testMode);
       //console.log("xrpl-transactions account info: " + JSON.stringify(message_acc_info));
       //this.infoLabel = JSON.stringify(message_acc_info);
       if(message_acc_info && message_acc_info.status && message_acc_info.type && message_acc_info.type === 'response') {
@@ -941,7 +957,7 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
 
           //console.log("starting to read account lines!")
 
-          let accountObjects = await this.xrplWebSocket.getWebsocketMessage('token-trasher', accountLinesCommand, this.testMode);
+          let accountObjects = await this.xahauWebsocket.getWebsocketMessage('token-trasher', accountLinesCommand, this.testMode);
           
           if(accountObjects?.result?.account_objects) {
             let trustlines:RippleState[] = accountObjects?.result?.account_objects;
@@ -959,7 +975,7 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
 
                 //await this.xrplWebSocket.getWebsocketMessage("token-trasher", server_info, this.isTestMode);
 
-                accountObjects = await this.xrplWebSocket.getWebsocketMessage('token-trasher', accountLinesCommand, this.testMode);
+                accountObjects = await this.xahauWebsocket.getWebsocketMessage('token-trasher', accountLinesCommand, this.testMode);
 
                 marker = accountObjects?.result?.marker;
 
@@ -1024,7 +1040,7 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
 
         let accInfo:any = null;
 
-        let message_acc_info:any = await this.xrplWebSocket.getWebsocketMessage("token-trasher", account_info_request, this.testMode);
+        let message_acc_info:any = await this.xahauWebsocket.getWebsocketMessage("token-trasher", account_info_request, this.testMode);
         //console.log("xrpl-transactions account info: " + JSON.stringify(message_acc_info));
         this.infoLabel = JSON.stringify(message_acc_info);
         if(message_acc_info && message_acc_info.status && message_acc_info.type && message_acc_info.type === 'response') {
@@ -1171,7 +1187,7 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
         transaction: txId,
     }
 
-    let message:any = await this.xrplWebSocket.getWebsocketMessage("escrowListExecuter", txInfo, this.testMode);
+    let message:any = await this.xahauWebsocket.getWebsocketMessage("escrowListExecuter", txInfo, this.testMode);
 
     //this.infoLabel = JSON.stringify(message);
 
@@ -1195,7 +1211,8 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
           txjson: {
               TransactionType: "Payment",
               Account: this.createdEscrow.Account,
-              Memos : [{Memo: {MemoType: Buffer.from("[https://xahau.services]-Memo", 'utf8').toString('hex').toUpperCase(), MemoData: Buffer.from("Payment for Auto Release of Escrow via xApp! Owner:" + this.createdEscrow.Account + " Sequence: " + this.createdEscrow.Sequence, 'utf8').toString('hex').toUpperCase()}}]
+              Memos : [{Memo: {MemoType: Buffer.from("[https://xahau.services]-Memo", 'utf8').toString('hex').toUpperCase(), MemoData: Buffer.from("Payment for Auto Release of Escrow via xApp! Owner:" + this.createdEscrow.Account + " Sequence: " + this.createdEscrow.Sequence, 'utf8').toString('hex').toUpperCase()}}],
+              NetworkID: this.testMode ? 21338 : 21337
           },
           custom_meta: {
               instruction: "SIGN WITH ESCROW OWNER ACCOUNT!!!\n\nEnable Auto Release for Escrow!\n\nEscrow-Owner: " + this.createdEscrow.Account + "\nSequence: " + this.createdEscrow.Sequence + "\nFinishAfter: " + new Date(normalizer.rippleEpocheTimeToUTC(this.createdEscrow.FinishAfter)).toLocaleString(),

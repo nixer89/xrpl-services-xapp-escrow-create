@@ -1,12 +1,7 @@
 <div [class]="themeClass">
   <!--label *ngIf="infoLabel" style="color: red">AppComponent: {{infoLabel}}</label-->
-  <div *ngIf="!isXahauConnected">
-    <escrowcreateXrpl [ottChanged]="ottReceived.asObservable()" [themeChanged]="appStyleChanged.asObservable()"></escrowcreateXrpl>
-  </div>
-
-  <div *ngIf="isXahauConnected">
-    <escrowcreateXahau [ottChanged]="ottReceived.asObservable()" [themeChanged]="appStyleChanged.asObservable()"></escrowcreateXahau>
-  </div>
+  <escrowcreateXrpl [ottChanged]="ottReceived.asObservable()" [themeChanged]="appStyleChanged.asObservable()"></escrowcreateXrpl>
+  <escrowcreateXahau [ottChanged]="ottReceived.asObservable()" [themeChanged]="appStyleChanged.asObservable()"></escrowcreateXahau>
   
   <app-footer></app-footer>
 </div>

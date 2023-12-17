@@ -18,8 +18,6 @@ export class AppComponent implements OnInit {
   receivedParams = false;
   alreadySent = false;
 
-  isXahauConnected:boolean = false;
-
   infoLabel:string = null;
 
   ottReceived: Subject<any> = new Subject<any>();
@@ -92,17 +90,20 @@ export class AppComponent implements OnInit {
         let ottResponse:xAppOttData = await this.xummService.getxAppOTTData(xAppToken);
         //console.log("ottResponse: " + JSON.stringify(ottResponse));
 
-        this.isXahauConnected = ottResponse.nodetype == 'XAHAU' || ottResponse.nodetype == 'XAHAUTESTNET';
-
         this.alreadySent = true;
+
+        //wait 1 second for initialization
+        await new Promise((resolve) => {setTimeout(resolve, 1000)});
 
         if(ottResponse && ottResponse.error) {
           //console.log("error OTT, only sending app style");
+          console.log("SENDING OTT")
           this.ottReceived.next({style: xAppStyle});
         } else {
+          console.log("SENDING OTT")
           this.ottReceived.next(ottResponse);
           this.alreadySent = true;
-        }      
+        }
       } else {
         //didn't got an ott. Just send over the app style (even if not available)
         this.timeout1 = setTimeout(() => {

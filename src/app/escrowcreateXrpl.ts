@@ -27,7 +27,10 @@ export class EscrowCreateComponentXrpl implements OnInit, OnDestroy {
               private xrplWebSocket: XRPLWebsocket,
               private snackBar: MatSnackBar,
               private overlayContainer: OverlayContainer,
-              private dateAdapter: DateAdapter<any>) { }
+              private dateAdapter: DateAdapter<any>) {
+
+                console.log("XRPL CONSTRUCTOR");
+              }
 
 
   @ViewChild('inpamount') inpamount;
@@ -85,7 +88,8 @@ export class EscrowCreateComponentXrpl implements OnInit, OnDestroy {
 
   dateTimePickerSupported:boolean = true;
 
-  loadingData:boolean = false;
+  loadingData:boolean = true;
+  initializing:boolean = true;
 
   createdEscrow:any = {}
   escrowReleaseData: any = {};
@@ -114,36 +118,64 @@ export class EscrowCreateComponentXrpl implements OnInit, OnDestroy {
 
   termsAndConditions:boolean = false;
 
+  isXahauConnected:boolean = false;
+
   ngOnInit() {
+    console.log("XRPL NG INIT!");
     this.ottReceived = this.ottChanged.subscribe(async ottData => {
       //console.log("ottReceived: " + JSON.stringify(ottData));
 
-      this.loadFeeReserves();
-
       if(ottData) {
 
-        //this.infoLabel = JSON.stringify(ottData);
-        
-        this.testMode = ottData.nodetype == 'TESTNET';
+        this.isXahauConnected = ottData.nodetype == 'XAHAU' || ottData.nodetype == 'XAHAUTESTNET';
+        console.log("isXahauConnected: " + this.isXahauConnected);
 
-        if(ottData.locale)
-          this.dateAdapter.setLocale(ottData.locale);
-        //this.infoLabel = "changed mode to testnet: " + this.testMode;
+        if(!this.isXahauConnected) { //not on XRPL, return!
 
-        if(ottData.version) {
-          let version:string[] = ottData.version.split('.');
-          this.xummMajorVersion = Number.parseInt(version[0]);
-          this.xummMinorVersion = Number.parseInt(version[1]);
+          await this.loadFeeReserves();
+
+          this.infoLabel = JSON.stringify(ottData);
+          
+          this.testMode = ottData.nodetype == 'TESTNET';
+
+          console.log("testMode: " + this.testMode);
+
+          if(ottData.locale)
+            this.dateAdapter.setLocale(ottData.locale);
+          //this.infoLabel = "changed mode to testnet: " + this.testMode;
+
+          if(ottData.version) {
+            let version:string[] = ottData.version.split('.');
+            this.xummMajorVersion = Number.parseInt(version[0]);
+            this.xummMinorVersion = Number.parseInt(version[1]);
+          }
+
+          if(ottData && ottData.account && ottData.accountaccess == 'FULL') {
+            await this.loadAccountData(ottData.account);
+
+          } else {
+            this.originalAccountInfo = "no account";
+          }
+
+          //add event listeners
+          if (typeof window.addEventListener === 'function') {
+            window.addEventListener("message", event => this.handleOverlayEvent(event));
+          }
+          
+          if (typeof document.addEventListener === 'function') {
+            document.addEventListener("message", event => this.handleOverlayEvent(event));
+          }
+
+          this.tw = new TypeWriter(["XRPL Services xApp", "created by nixerFFM", "XRPL Services xApp"], t => {
+            this.title = t;
+          });
         }
 
-        if(ottData && ottData.account && ottData.accountaccess == 'FULL') {
+        this.initializing = false;
+        this.loadingData = false;
 
-          await this.loadAccountData(ottData.account);
-          this.loadingData = false;
-
-          //await this.loadAccountData(ottData.account); //false = ottResponse.node == 'TESTNET' 
-        } else {
-          this.originalAccountInfo = "no account";
+        if(this.tw) {
+          this.tw.start();
         }
       }
 
@@ -167,21 +199,6 @@ export class EscrowCreateComponentXrpl implements OnInit, OnDestroy {
       this.overlayContainer.getContainerElement().classList.add(this.themeClass);
     });
     //this.infoLabel = JSON.stringify(this.device.getDeviceInfo());
-
-    //add event listeners
-    if (typeof window.addEventListener === 'function') {
-      window.addEventListener("message", event => this.handleOverlayEvent(event));
-    }
-    
-    if (typeof document.addEventListener === 'function') {
-      document.addEventListener("message", event => this.handleOverlayEvent(event));
-    }
-
-    this.tw = new TypeWriter(["XRPL Services xApp", "created by nixerFFM", "XRPL Services xApp"], t => {
-      this.title = t;
-    })
-
-    this.tw.start();
 
     //this.dateTimePickerSupported = !(this.device && this.device.getDeviceInfo() && this.device.getDeviceInfo().os_version && (this.device.getDeviceInfo().os_version.toLowerCase().includes('ios') || this.device.getDeviceInfo().browser.toLowerCase().includes('safari') || this.device.getDeviceInfo().browser.toLowerCase().includes('edge')));
     this.dateTimePickerSupported = true;
@@ -445,7 +462,11 @@ export class EscrowCreateComponentXrpl implements OnInit, OnDestroy {
     try {
         payloadRequest.payload.options = {
           expire: 2,
-          signers: [payloadRequest.payload.txjson.Account+""]
+          force_network: this.testMode ? "TESTNET" : "MAINNET"
+        }
+
+        if(payloadRequest.payload.txjson.Account) {
+          payloadRequest.payload.options.signers = [payloadRequest.payload.txjson.Account+""];
         }
 
         //console.log("sending xumm payload: " + JSON.stringify(xummPayload));
