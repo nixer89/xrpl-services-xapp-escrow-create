@@ -2,8 +2,8 @@ import { Component, ViewChild, OnInit, Input, OnDestroy } from '@angular/core';
 import * as normalizer from './utils/normalizers'
 import { isValidXRPAddress } from './utils/utils';
 import { MatStepper } from '@angular/material/stepper';
-import { XummService } from './services/xumm.service';
-import { XRPLWebsocket } from './services/xrplWebSocket';
+import { XummService } from './services/xahau.services';
+import { XRPLWebsocket } from './services/xahauWebSocket';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { GenericBackendPostRequest, RippleState, SimpleTrustline, TransactionValidation } from './utils/types';
 import { XummTypes } from 'xumm-sdk';
@@ -24,9 +24,9 @@ const lsfLowFreeze = 0x400000;
 const lsfHighFreeze = 0x800000;
 
 @Component({
-  selector: 'escrowcreate',
-  templateUrl: './escrowcreate.html',
-  styleUrls: ['./escrowcreate.css']
+  selector: 'escrowcreateXahau',
+  templateUrl: './escrowcreateXahau.html',
+  styleUrls: ['./escrowcreateXahau.css']
 })
 export class EscrowCreateComponent implements OnInit, OnDestroy {
 

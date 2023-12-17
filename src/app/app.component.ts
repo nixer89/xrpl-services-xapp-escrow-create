@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs';
-import { XummService } from './services/xumm.service';
+import { XummService } from './services/xahau.services';
 import { OverlayContainer } from '@angular/cdk/overlay';
 
 @Component({

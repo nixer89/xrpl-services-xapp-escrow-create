@@ -8,8 +8,8 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import { FooterComponent } from './footer';
 import { EscrowCreateComponent } from './escrowcreate';
 import { AppService } from './services/app.service';
-import { XummService } from './services/xumm.service';
-import { XRPLWebsocket } from './services/xrplWebSocket';
+import { XummService } from './services/xahau.services';
+import { XRPLWebsocket } from './services/xahauWebSocket';
 
 //Angular Material
 import { MatCardModule } from '@angular/material/card';
