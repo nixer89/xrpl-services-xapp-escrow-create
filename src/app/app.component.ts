@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs';
-import { XummService } from './services/xahau.services';
+import { XahauServices } from './services/xahau.services';
 import { OverlayContainer } from '@angular/cdk/overlay';
+import { xAppOttData } from 'xumm-sdk';
 
 @Component({
   selector: 'app-root',
@@ -17,6 +18,8 @@ export class AppComponent implements OnInit {
   receivedParams = false;
   alreadySent = false;
 
+  isXahauConnected:boolean = false;
+
   infoLabel:string = null;
 
   ottReceived: Subject<any> = new Subject<any>();
@@ -25,7 +28,7 @@ export class AppComponent implements OnInit {
   timeout1: any;
   timeout2: any;
 
-  constructor(private route: ActivatedRoute, private xummService: XummService, private overlayContainer: OverlayContainer) { }
+  constructor(private route: ActivatedRoute, private xummService: XahauServices, private overlayContainer: OverlayContainer) { }
 
   ngOnInit() {
     this.route.queryParams.subscribe(async params => {
@@ -86,8 +89,10 @@ export class AppComponent implements OnInit {
       this.appStyleChanged.next({theme: this.themeClass, color: this.backgroundColor});
 
       if(xAppToken) {
-        let ottResponse:any = await this.xummService.getxAppOTTData(xAppToken);
+        let ottResponse:xAppOttData = await this.xummService.getxAppOTTData(xAppToken);
         //console.log("ottResponse: " + JSON.stringify(ottResponse));
+
+        this.isXahauConnected = ottResponse.nodetype == 'XAHAU' || ottResponse.nodetype == 'XAHAUTESTNET';
 
         this.alreadySent = true;
 

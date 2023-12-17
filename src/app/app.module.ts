@@ -6,10 +6,13 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 
 //my modules
 import { FooterComponent } from './footer';
-import { EscrowCreateComponent } from './escrowcreate';
+import { EscrowCreateComponentXahau } from './escrowcreateXahau';
+import { EscrowCreateComponentXrpl} from './escrowcreateXrpl';
 import { AppService } from './services/app.service';
-import { XummService } from './services/xahau.services';
-import { XRPLWebsocket } from './services/xahauWebSocket';
+import { XahauServices } from './services/xahau.services';
+import { XahauWebsocket } from './services/xahauWebSocket';
+import { XrplServices } from './services/xrpl.services';
+import { XRPLWebsocket } from './services/xrplWebSocket';
 
 //Angular Material
 import { MatCardModule } from '@angular/material/card';
@@ -33,7 +36,8 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
   declarations: [
     AppComponent,
     FooterComponent,
-    EscrowCreateComponent
+    EscrowCreateComponentXahau,
+    EscrowCreateComponentXrpl
   ],
   imports: [
     BrowserModule,
@@ -58,7 +62,9 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
   ],
   providers: [
     AppService,
-    XummService,
+    XahauServices,
+    XahauWebsocket,
+    XrplServices,
     XRPLWebsocket,
     MatMomentDateModule
   ],

@@ -2,21 +2,21 @@ import { webSocket } from 'rxjs/webSocket';
 import { Injectable, Optional, SkipSelf } from '@angular/core';
 
 @Injectable()
-export class XahauWebsocket {
+export class XRPLWebsocket {
     
     originalTestModeValue:boolean = false;
-    mainNodes:string[] = ['wss://xahau.org', 'wss://xahau.org'];
-    testNodes:string[] = ['wss://xahau-test.net', 'wss://xahau-test.net'];
+    mainNodes:string[] = ['wss://xrplcluster.com', 'wss://s2.ripple.com'];
+    testNodes:string[] = ['wss://testnet.xrpl-labs.com', 'wss://s.altnet.rippletest.net'];
     mainFirst:boolean = true;
     testFirst:boolean = true;
     errorsToSwitch:string[] = ["amendmentBlocked", "failedToForward", "invalid_API_version", "noClosed", "noCurrent", "noNetwork", "tooBusy"]
 
     websocketMap:Map<string, any> = new Map();
 
-    constructor (@Optional() @SkipSelf() parentModule?: XahauWebsocket) {
+    constructor (@Optional() @SkipSelf() parentModule?: XRPLWebsocket) {
         if (parentModule) {
           throw new Error(
-            'XahauWebsocket is already loaded. Import it in the AppModule only');
+            'XRPLWebsocket is already loaded. Import it in the AppModule only');
         }
     }
 
