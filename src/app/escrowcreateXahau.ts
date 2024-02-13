@@ -15,6 +15,7 @@ import { FormControl } from '@angular/forms';
 import { DateAdapter } from '@angular/material/core';
 import { TypeWriter } from './utils/TypeWriter';
 import * as clipboard from 'copy-to-clipboard';
+import { AppService } from './services/app.service';
 
 //RippleState Flags
 const lsfLowReserve = 0x10000;
@@ -32,6 +33,7 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
 
   constructor(private xummService: XahauServices,
               private xahauWebsocket: XahauWebsocket,
+              private appService: AppService,
               private snackBar: MatSnackBar,
               private overlayContainer: OverlayContainer,
               private dateAdapter: DateAdapter<any>) {
@@ -119,6 +121,7 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
   escrowDestinationHasDestTagEnabled:boolean = false;
   destinationAccountExists = false;
   validatingEscrow:boolean = false;
+  ownerHasBalanceForOwnerReserve:boolean = false;
 
   checkBoxYears:boolean = false;
 
@@ -139,6 +142,8 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
 
   xummOutdated:boolean = false;
   isXahauConnected:boolean = false;
+
+  accountNames:any[] = [];
 
   ngOnInit() {
     console.log("XAHAU NG INIT!");
@@ -290,27 +295,29 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
 
     if(this.amountInput) {
       this.validAmount = /^[0-9]\d*(\.\d{1,15})?$/.test(this.amountInput);
-      console.log("this.validAmount 1 : " + this.validAmount);
+      //console.log("this.validAmount 1 : " + this.validAmount);
     }
 
-    console.log("this.escrowBiggerThanAvailable(): " + this.escrowBiggerThanAvailable());
+    //console.log("this.escrowBiggerThanAvailable(): " + this.escrowBiggerThanAvailable());
 
     if(this.validAmount)
       this.validAmount = this.amountInput && !this.escrowBiggerThanAvailable();
 
-    console.log("this.validAmount 2 : " + this.validAmount);
+    //console.log("this.validAmount 2 : " + this.validAmount);
 
-    console.log("this.selectedToken: " + JSON.stringify(this.selectedToken))
+    //console.log("this.selectedToken: " + JSON.stringify(this.selectedToken))
     
     if(this.validAmount && this.selectedToken && this.selectedToken.currency === 'XAH') {
       this.validAmount = !(/[^.0-9]|\d*\.\d{7,}/.test(this.amountInput)) && parseFloat(this.amountInput) >= 0.000001;
-      console.log("this.validAmount 3 : " + this.validAmount);
+      //console.log("this.validAmount 3 : " + this.validAmount);
 
       if(!this.validAmount) {
         this.maxSixDigits = this.amountInput.includes('.') && this.amountInput.split('.')[1].length > 6;
       } else {
         this.maxSixDigits = false;
       }
+    } else {
+      this.maxSixDigits = false;
     }
     
     this.validAddress = this.destinationInput && this.destinationInput.trim().length > 0 && isValidXRPAddress(this.destinationInput.trim());
@@ -324,7 +331,7 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
 
         await this.checkDestinationHasTrustline(this.destinationInput);
 
-        console.log("destinationHasTrustline: " + this.destinationHasTrustline);
+        //console.log("destinationHasTrustline: " + this.destinationHasTrustline);
 
         this.escrowDestinationSigned = userHasSignedInDestination;
 
@@ -581,6 +588,25 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
     }
   }
 
+  getAvailableXahBalance(): number {
+    if(this.originalAccountInfo && this.originalAccountInfo.Balance) {
+      let balance:number = Number(this.originalAccountInfo.Balance);
+      balance = balance - this.accountReserve; //deduct acc reserve
+      balance = balance - this.originalAccountInfo.OwnerCount * this.ownerReserve; //deduct owner count
+      balance = balance - 1000; //deduct some transaction fee as quick fix
+      balance = balance/1000000;
+
+      console.log("AVAILABLE BALANCE: " + balance);
+
+      if(balance >= 0.000001)
+        return balance
+      else
+        return 0;
+    } else {
+      return 0;
+    }
+  }
+
   getAvailableXrpBalanceForEscrow(): number {
     if(this.originalAccountInfo && this.originalAccountInfo.Balance) {
       let balance:number = Number(this.originalAccountInfo.Balance);
@@ -815,7 +841,7 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
     this.cancelafterTimeInput = this.cancelAfterDateTime = null;
     this.finishafterTimeInput = this.finishAfterDateTime = null;
 
-    this.cancelDateInFuture =  this.finishDateInFuture = this.cancelDateBeforeFinishDate = false;
+    this.cancelDateInFuture =  this.finishDateInFuture = this.cancelDateBeforeFinishDate = this.destinationHasTrustline = this.ownerHasBalanceForOwnerReserve = false;
 
     this.isValidEscrow = this.validAddress = this.validAmount = this.validCancelAfter = this.validFinishAfter = false;
   }
@@ -842,6 +868,12 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
       if(message_acc_info && message_acc_info.status && message_acc_info.type && message_acc_info.type === 'response') {
         if(message_acc_info.status === 'success' && message_acc_info.result && message_acc_info.result.account_data) {
           this.originalAccountInfo = message_acc_info.result.account_data;
+
+          if(this.getAvailableXahBalance() > 0.2) {
+            this.ownerHasBalanceForOwnerReserve = true;
+          } else {
+            this.ownerHasBalanceForOwnerReserve = false;
+          }
         } else {
           this.originalAccountInfo = message_acc_info;
         }
@@ -964,8 +996,8 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
 
             let marker = accountObjects.result.marker;
 
-            console.log("marker: " + marker);
-            console.log("LEDGER_INDEX : " + accountObjects.result.ledger_index);
+            //console.log("marker: " + marker);
+            //console.log("LEDGER_INDEX : " + accountObjects.result.ledger_index);
 
 
             while(marker) {
@@ -989,9 +1021,9 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
             //console.log("finished to read account lines!")
             let simpleTrustlines:SimpleTrustline[] = this.rippleStateToSimpleTrustline(destinationAccount, trustlines);
 
-            console.log("DESTINATION TRUSTLINES:")
-            console.log(JSON.stringify(simpleTrustlines));
-            console.log("SELECTED TOKEN: " + JSON.stringify(this.selectedToken));
+            //console.log("DESTINATION TRUSTLINES:")
+            //console.log(JSON.stringify(simpleTrustlines));
+            //console.log("SELECTED TOKEN: " + JSON.stringify(this.selectedToken));
 
             this.destinationHasTrustline = false;
 
@@ -1116,7 +1148,7 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
       newSimpleTrustlines = [{balance: this.getAvailableXrpBalanceForEscrow(), balanceShow: this.getAvailableXrpBalanceForEscrow(), currency: 'XAH', currencyShow: 'XAH', isFrozen: false, issuer: 'XAH', limit: 100000000, limitShow: 100000000, lockedBalance: 0}].concat(newSimpleTrustlines);
     }
 
-    this.simpleTrustlines = newSimpleTrustlines;
+    this.simpleTrustlines = newSimpleTrustlines;    
 
     this.applyFilters = false;
   }
@@ -1146,7 +1178,15 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
         let limitShow = normalizer.normalizeBalance(limit);
         let isFrozen = this.isFrozen(rippleStates[i]);
 
-        newSimpleTrustlines.push({issuer: issuer, currency: currency, currencyShow: currencyShow, balance: balance, balanceShow: balanceShow, isFrozen: isFrozen, limit: limit, limitShow: limitShow, lockedBalance: lockedBalance});
+        let foundObject = this.accountNames.filter(a => a.account === issuer);
+
+        let name = null;
+
+        if(foundObject && foundObject.length > 1) {
+          name = foundObject[0].name;
+        }
+
+        newSimpleTrustlines.push({issuer: issuer, currency: currency, currencyShow: currencyShow, balance: balance, balanceShow: balanceShow, isFrozen: isFrozen, limit: limit, limitShow: limitShow, lockedBalance: lockedBalance, name: name});
       }
     }
 
@@ -1269,6 +1309,18 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
         return expectedRelease.toLocaleString();
     } else
         return "-";
+  }
+
+  async loadAccountNames() {
+    try {
+      let wellKnown = await this.appService.get("https://api.xahscan.com/api/v1/names/well-known");
+
+      if(wellKnown?.length > 0) {
+        this.accountNames = wellKnown;
+      }
+    } catch(err) {
+      console.log(err);
+    }
   }
 
   openTermsAndConditions() {

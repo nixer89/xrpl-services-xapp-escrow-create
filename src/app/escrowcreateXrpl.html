@@ -101,12 +101,12 @@
             </form>
 
             <div *ngIf="destinationName">
-              <label>XUMM name: {{destinationName}}</label>
+              <label>Xaman name: {{destinationName}}</label>
             </div>
 
             <div fxLayout="column" fxLayoutGap="1em" fxLayoutAlign="start start">
               <label class="xumm-grey">Alternatively:</label>
-              <button mat-raised-button color="primary" (click)="chooseDestinationFromXumm()" [disabled]="loadingData">Choose from XUMM&nbsp;<mat-icon>login</mat-icon></button>
+              <button mat-raised-button color="primary" (click)="chooseDestinationFromXumm()" [disabled]="loadingData">Choose from Xaman&nbsp;<mat-icon>login</mat-icon></button>
               <button mat-raised-button color="primary" (click)="scanForDestination()" [disabled]="loadingData">Scan QR&nbsp;<mat-icon>qr_code_scanner</mat-icon></button>
             </div>
 

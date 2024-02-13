@@ -130,5 +130,6 @@ export interface SimpleTrustline {
     lockedBalance: number,
     limit: number,
     limitShow:number,
-    isFrozen: boolean
+    isFrozen: boolean,
+    name?: string
 }
