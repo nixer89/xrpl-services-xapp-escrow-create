@@ -7,7 +7,6 @@ import { XahauWebsocket } from './services/xahauWebSocket';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { GenericBackendPostRequest, RippleState, SimpleTrustline, TransactionValidation } from './utils/types';
 import { XummTypes, xAppOttData } from 'xumm-sdk';
-import { webSocket, WebSocketSubject} from 'rxjs/webSocket';
 import { Subscription, Observable } from 'rxjs';
 import { OverlayContainer } from '@angular/cdk/overlay';
 import * as flagUtils from './utils/flagutils';
@@ -64,8 +63,6 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
 
   finishAfterFormCtrl:FormControl = new FormControl();
   cancelAfterFormCtrl:FormControl = new FormControl();
-
-  websocket: WebSocketSubject<any>;
 
   originalAccountInfo:any;
   testMode:boolean = false;
@@ -197,10 +194,6 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
             window.addEventListener("message", event => this.handleOverlayEvent(event));
           }
           
-          if (typeof document.addEventListener === 'function') {
-            document.addEventListener("message", event => this.handleOverlayEvent(event));
-          }
-
           this.tw = new TypeWriter(["Xahau Services xApp", "created by nixerFFM", "Xahau Services xApp"], t => {
             this.title = t;
           });
@@ -559,29 +552,46 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
     //remove old websocket
     try {
 
-      if(this.websocket && !this.websocket.closed) {
-        this.websocket.unsubscribe();
-        this.websocket.complete();
-      }
+      return new Promise( async (resolve, reject) => {
 
-      return new Promise( (resolve, reject) => {
+        //use event listeners over websockets
+        if(typeof window.addEventListener === 'function') {
+          window.addEventListener("message", event => {
+            try {
+              if(event && event.data) {
+                let eventData = JSON.parse(event.data);
+        
+                console.log("WINDOW: " + eventData);
 
-        this.websocket = webSocket(xummResponse.refs.websocket_status);
-        this.websocket.asObservable().subscribe(async message => {
-            //console.log("message received: " + JSON.stringify(message));
-            //this.infoLabel = "message received: " + JSON.stringify(message);
+                if(eventData && eventData.method == "payloadResolved") {
 
-            if((message.payload_uuidv4 && message.payload_uuidv4 === xummResponse.uuid) || message.expired || message.expires_in_seconds <= 0) {
+                  window.removeAllListeners("message");
 
-              if(this.websocket) {
-                this.websocket.unsubscribe();
-                this.websocket.complete();
+                  //add event listeners
+                  window.addEventListener("message", event => this.handleOverlayEvent(event));
+
+                  if(eventData.reason == "SIGNED") {
+                    //create own response
+                    let message = {
+                      signed: true,
+                      payload_uuidv4: eventData.uuid
+                    }
+                    
+                    resolve(message);
+
+                  } else if(eventData.reason == "DECLINED") {
+                    //user closed without signing
+                    resolve(null)
+                  }
+                }
               }
-              
-              return resolve(message);
+            } catch(err) {
+              //ignore errors
             }
-        });
+          });
+        }
       });
+
     } catch(err) {
       this.loadingData = false;
       //this.infoLabel = JSON.stringify(err);
@@ -717,9 +727,6 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
               await this.checkChanges();
               this.loadingData = false;
             }
-          } else if(eventData.method == "payloadResolved" && eventData.reason == "DECLINED") {
-            //user closed without signing
-            this.loadingData = false;
           } else if(eventData.method == "selectDestination") {
             this.infoLabel = "selectDestination triggered: " + JSON.stringify(eventData);
             if(eventData.reason == "SELECTED" && isValidXRPAddress(eventData.destination.address)) {
