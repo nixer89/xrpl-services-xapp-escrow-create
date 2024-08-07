@@ -193,6 +193,10 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
           if (typeof window.addEventListener === 'function') {
             window.addEventListener("message", event => this.handleOverlayEvent(event));
           }
+
+          if (typeof document.addEventListener === 'function') {
+            document.addEventListener("message", event => this.handleOverlayEvent(event));
+          }
           
           this.tw = new TypeWriter(["Xahau Services xApp", "created by nixerFFM", "Xahau Services xApp"], t => {
             this.title = t;
@@ -567,9 +571,11 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
                 if(eventData && eventData.method == "payloadResolved") {
 
                   window.removeAllListeners("message");
+                  window.addEventListener("message", event => this.handleOverlayEvent(event));
 
                   if(typeof document.addEventListener === 'function') {
                     document.removeAllListeners("message");
+                    document.addEventListener("message", event => this.handleOverlayEvent(event));
                   }
 
                   if(eventData.reason == "SIGNED") {
@@ -606,8 +612,11 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
                 if(eventData && eventData.method == "payloadResolved") {
 
                   document.removeAllListeners("message");
+                  document.addEventListener("message", event => this.handleOverlayEvent(event));
+
                   if(typeof window.addEventListener === 'function') {
                     window.removeAllListeners("message");
+                    window.addEventListener("message", event => this.handleOverlayEvent(event));
                   }
 
                   if(eventData.reason == "SIGNED") {
