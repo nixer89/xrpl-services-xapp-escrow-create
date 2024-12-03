@@ -218,10 +218,17 @@ export class EscrowCreateComponentXrpl implements OnInit, OnDestroy {
 
     let feeSetting:any = await this.xrplWebSocket.getWebsocketMessage("fee-settings", fee_request, this.testMode);
 
-    console.log("feeSetting: " + JSON.stringify(feeSetting));
+    if(feeSetting?.result?.node["ReserveBaseDrops"]) {
+      this.accountReserve = feeSetting?.result?.node["ReserveBaseDrops"];
+    } else if(feeSetting?.result?.node["ReserveBase"]) {
+      this.accountReserve = feeSetting?.result?.node["ReserveBase"];
+    }
 
-    this.accountReserve = feeSetting?.result?.node["ReserveBaseDrops"];
-    this.ownerReserve = feeSetting?.result?.node["ReserveIncrementDrops"];
+    if(feeSetting?.result?.node["ReserveIncrementDrops"]) {
+      this.ownerReserve = feeSetting?.result?.node["ReserveIncrementDrops"];
+    } else if(feeSetting?.result?.node["ReserveIncrement"]) {
+      this.ownerReserve = feeSetting?.result?.node["ReserveIncrement"];
+    }
 
     console.log("resolved accountReserve: " + this.accountReserve);
     console.log("resolved ownerReserve: " + this.ownerReserve);
