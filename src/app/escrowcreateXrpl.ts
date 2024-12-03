@@ -110,8 +110,8 @@ export class EscrowCreateComponentXrpl implements OnInit, OnDestroy {
 
   errorLabel:string = null;
 
-  accountReserve:number = 10000000;
-  ownerReserve:number = 2000000;
+  accountReserve:number = 1000000;
+  ownerReserve:number = 200000;
 
   termsAndConditions:boolean = false;
 
@@ -217,8 +217,11 @@ export class EscrowCreateComponentXrpl implements OnInit, OnDestroy {
     }
 
     let feeSetting:any = await this.xrplWebSocket.getWebsocketMessage("fee-settings", fee_request, this.testMode);
-    this.accountReserve = feeSetting?.result?.node["ReserveBase"];
-    this.ownerReserve = feeSetting?.result?.node["ReserveIncrement"];
+
+    console.log("feeSetting: " + JSON.stringify(feeSetting));
+
+    this.accountReserve = feeSetting?.result?.node["ReserveBaseDrops"];
+    this.ownerReserve = feeSetting?.result?.node["ReserveIncrementDrops"];
 
     console.log("resolved accountReserve: " + this.accountReserve);
     console.log("resolved ownerReserve: " + this.ownerReserve);
