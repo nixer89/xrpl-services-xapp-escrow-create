@@ -249,16 +249,12 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
 
     let feeSetting:any = await this.xahauWebsocket.getWebsocketMessage("fee-settings", fee_request, this.testMode);
 
-    if(feeSetting?.result?.node["ReserveBaseDrops"]) {
-      this.accountReserve = feeSetting?.result?.node["ReserveBaseDrops"];
-    } else if(feeSetting?.result?.node["ReserveBase"]) {
-      this.accountReserve = feeSetting?.result?.node["ReserveBase"];
-    }
-
-    if(feeSetting?.result?.node["ReserveIncrementDrops"]) {
-      this.ownerReserve = feeSetting?.result?.node["ReserveIncrementDrops"];
-    } else if(feeSetting?.result?.node["ReserveIncrement"]) {
-      this.ownerReserve = feeSetting?.result?.node["ReserveIncrement"];
+    if('ReserveBase' in feeSetting?.result?.node) {
+      this.accountReserve = feeSetting?.result?.node.ReserveBase;
+      this.ownerReserve = feeSetting?.result?.node.ReserveIncrement;
+    } else {
+      this.accountReserve = Number(feeSetting?.result?.node.ReserveBaseDrops);
+      this.ownerReserve = Number(feeSetting?.result?.node.ReserveIncrementDrops);
     }
 
     console.log("resolved accountReserve: " + this.accountReserve);
