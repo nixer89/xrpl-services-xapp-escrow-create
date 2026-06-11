@@ -8,12 +8,24 @@ export class XahauServices {
     constructor(private app: AppService) {}
 
     isTestMode = false;
-    xummBackendURL = this.isTestMode ? 'http://localhost:4001' : 'https://api.xahau.services';
+    xahauServicesBackendURL = this.isTestMode ? 'http://localhost:4001' : 'https://api.xahau.services';
+
+    async ping(): Promise<boolean> {
+        try {
+            let ping:any = await this.app.getText(this.xahauServicesBackendURL+"/");
+            //console.log(JSON.stringify(ping));
+            return "I am alive!" === ping;
+        } catch(err) {
+            //console.log("error: ");
+            console.log(JSON.stringify(err))
+            return false;
+        }
+    }
 
     async submitPayload(payload:GenericBackendPostRequest): Promise<XummTypes.XummPostPayloadResponse> {
         try {
             console.log("submitting payload: " + JSON.stringify(payload));
-            return this.app.post(this.xummBackendURL+"/api/v1/platform/payload", payload);
+            return this.app.post(this.xahauServicesBackendURL+"/api/v1/platform/payload", payload);
         } catch(err) {
             //console.log("error: ");
             console.log(JSON.stringify(err))
@@ -23,7 +35,7 @@ export class XahauServices {
 
     async getPayloadInfo(payloadId:string): Promise<XummTypes.XummGetPayloadResponse> {
         try {
-            return this.app.get(this.xummBackendURL+"/api/v1/platform/payload/"+payloadId);
+            return this.app.get(this.xahauServicesBackendURL+"/api/v1/platform/payload/"+payloadId);
         } catch(err) {
             console.log(JSON.stringify(err))
             return null;
@@ -32,7 +44,7 @@ export class XahauServices {
 
     async deletePayload(payloadId:string): Promise<XummTypes.XummDeletePayloadResponse> {
         try {
-            return this.app.delete(this.xummBackendURL+"/api/v1/platform/payload/"+payloadId);
+            return this.app.delete(this.xahauServicesBackendURL+"/api/v1/platform/payload/"+payloadId);
         } catch(err) {
             console.log(JSON.stringify(err))
             return null;
@@ -41,7 +53,7 @@ export class XahauServices {
     
     async getxAppOTTData(token: string): Promise<any> {
         try {
-            return this.app.get(this.xummBackendURL+"/api/v1/platform/xapp/ott/" + token);
+            return this.app.get(this.xahauServicesBackendURL+"/api/v1/platform/xapp/ott/" + token);
         } catch(err) {
             console.log(JSON.stringify(err))
             return { error: true, success: false, testnet:false }
@@ -50,7 +62,7 @@ export class XahauServices {
 
     async sendxAppEvent(data: any): Promise<any> {
         try {
-            return this.app.post(this.xummBackendURL+"/api/v1/platform/xapp/event", data);
+            return this.app.post(this.xahauServicesBackendURL+"/api/v1/platform/xapp/event", data);
         } catch(err) {
             console.log(JSON.stringify(err))
             return { error: true, success: false, testnet:false }
@@ -59,7 +71,7 @@ export class XahauServices {
 
     async sendxAppPush(data: any): Promise<any> {
         try {
-            return this.app.post(this.xummBackendURL+"/api/v1/platform/xapp/evepushnt", data);
+            return this.app.post(this.xahauServicesBackendURL+"/api/v1/platform/xapp/evepushnt", data);
         } catch(err) {
             console.log(JSON.stringify(err))
             return { error: true, success: false, testnet:false }
@@ -68,7 +80,7 @@ export class XahauServices {
 
     async checkSignIn(payloadId:string): Promise<TransactionValidation> {
         try {
-            return this.app.get(this.xummBackendURL+"/api/v1/check/signin/"+payloadId);
+            return this.app.get(this.xahauServicesBackendURL+"/api/v1/check/signin/"+payloadId);
         } catch(err) {
             console.log(JSON.stringify(err))
             return { error: true, success: false, testnet:false }
@@ -77,7 +89,7 @@ export class XahauServices {
 
     async validateTransaction(payloadId:string): Promise<TransactionValidation> {
         try {
-            return this.app.get(this.xummBackendURL+"/api/v1/xrpl/validatetx/"+payloadId);
+            return this.app.get(this.xahauServicesBackendURL+"/api/v1/xrpl/validatetx/"+payloadId);
         } catch(err) {
             console.log(JSON.stringify(err))
             return { error: true, success: false, testnet:false }
@@ -86,7 +98,7 @@ export class XahauServices {
 
     async validateEscrowPayment(payloadId:string): Promise<TransactionValidation> {
         try {
-            return this.app.get(this.xummBackendURL+"/api/v1/escrow/validatepayment/" + payloadId);
+            return this.app.get(this.xahauServicesBackendURL+"/api/v1/escrow/validatepayment/" + payloadId);
         } catch(err) {
             console.log(JSON.stringify(err))
             return { error: true, success: false, testnet:false }

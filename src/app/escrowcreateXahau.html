@@ -7,6 +7,10 @@
       </div>
     </mat-toolbar-row>
   </mat-toolbar>
+
+  <mat-toolbar *ngIf="!loadingBackend && !backendAvailable" class="warning-background" fxLayout="row" fxLayoutAlign="center center" ngStyle.xs="font-size: 0.9em; white-space: pre-wrap;">
+    <label>Maintenance currently ongoing. We are back soon! Thank you for your understanding!</label>
+  </mat-toolbar>
   
   <mat-card class="mat-card-red" *ngIf="errorLabel" fxLayout="column" fxLayoutGap="0.5em;">
     <label>Sorry that this error happened! Please copy of the following error and contact @XrplServices on twitter or send a mail to: info@xrpl.services . Thanks for your help!</label><br>
@@ -20,12 +24,12 @@
   <label *ngIf="infoLabel2" style="color: red">{{infoLabel2}}</label>
   <label *ngIf="infoLabel3" style="color: red">{{infoLabel3}}</label-->
 
-  <mat-card *ngIf="initializing" class="mat-card-orange  margin-5" fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="0.5em;">
+  <mat-card *ngIf="initializing && !loadingBackend && backendAvailable" class="mat-card-orange  margin-5" fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="0.5em;">
     <label>Initializing the xApp ... </label>
     <mat-progress-spinner color="primary" mode="indeterminate" diameter=25></mat-progress-spinner>
   </mat-card>
 
-  <div *ngIf="!initializing && xummOutdated">
+  <div *ngIf="!initializing && xummOutdated && !loadingBackend && backendAvailable">
     <mat-card fxFlex fxLayout="column" fxLayoutAlign="start center" class="mat-card-orange margin-5">
       <label style="text-align: center;">Your current Xaman App version is: {{xummMajorVersion}}.{{xummMinorVersion}}.</label>
       <label>&nbsp;</label>
@@ -34,7 +38,7 @@
     </mat-card>
   </div>  
 
-  <div *ngIf="!initializing && !xummOutdated">
+  <div *ngIf="!initializing && !xummOutdated && !loadingBackend && backendAvailable">
     <mat-vertical-stepper linear #escrowStepper class="theme-background">
       <mat-step completed="false" editable="false" fxLayout="column" fxLayoutGap="0.5em">
         <mat-card fxLayout="column" fxLayoutGap="1em">

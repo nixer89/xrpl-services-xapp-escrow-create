@@ -116,9 +116,16 @@ export class EscrowCreateComponentXrpl implements OnInit, OnDestroy {
   termsAndConditions:boolean = false;
 
   isXahauConnected:boolean = false;
+  loadingBackend:boolean = true;
+  backendAvailable:boolean = false;
 
-  ngOnInit() {
+  async ngOnInit() {
     console.log("XRPL NG INIT!");
+    
+    this.loadingBackend = true;
+    this.backendAvailable = await this.xummService.ping();
+    this.loadingBackend = false;
+
     this.ottReceived = this.ottChanged.subscribe(async ottData => {
       //console.log("ottReceived: " + JSON.stringify(ottData));
 

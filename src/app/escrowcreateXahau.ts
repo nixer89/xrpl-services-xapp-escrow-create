@@ -140,10 +140,18 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
   xummOutdated:boolean = false;
   isXahauConnected:boolean = false;
 
+  loadingBackend:boolean = true;
+  backendAvailable:boolean = false;
+
   accountNames:any[] = [];
 
-  ngOnInit() {
+  async ngOnInit() {
     console.log("XAHAU NG INIT!");
+
+    this.loadingBackend = true;
+    this.backendAvailable = await this.xummService.ping();
+    this.loadingBackend = false;
+
     this.ottReceived = this.ottChanged.subscribe(async ottData => {
       //console.log("ottReceived: " + JSON.stringify(ottData));
 
