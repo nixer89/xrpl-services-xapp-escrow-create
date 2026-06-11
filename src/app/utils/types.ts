@@ -131,5 +131,6 @@ export interface SimpleTrustline {
     limit: number,
     limitShow:number,
     isFrozen: boolean,
+    escrowAllowed: boolean,
     name?: string
 }

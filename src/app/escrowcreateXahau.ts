@@ -672,7 +672,7 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
     }
   }
 
-  getAvailableXrpBalanceForEscrow(): number {
+  getAvailableXahBalanceForEscrow(): number {
     if(this.originalAccountInfo && this.originalAccountInfo.Balance) {
       let balance:number = Number(this.originalAccountInfo.Balance);
       balance = balance - this.accountReserve; //deduct acc reserve
@@ -931,7 +931,7 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
         if(message_acc_info.status === 'success' && message_acc_info.result && message_acc_info.result.account_data) {
           this.originalAccountInfo = message_acc_info.result.account_data;
 
-          if(this.getAvailableXahBalance() > 0.2) {
+          if(Math.round(this.getAvailableXahBalance()*1000000) > this.ownerReserve) {
             this.ownerHasBalanceForOwnerReserve = true;
           } else {
             this.ownerHasBalanceForOwnerReserve = false;
@@ -1185,8 +1185,8 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
     }
 
     //add XAH in case it is available
-    if(this.getAvailableXrpBalanceForEscrow() > 0) {
-      filteredTrustlines = [{balance: this.getAvailableXrpBalanceForEscrow(), balanceShow: this.getAvailableXrpBalanceForEscrow(), currency: 'XAH', currencyShow: 'XAH', isFrozen: false, issuer: 'XAH', limit: 100000000, limitShow: 100000000, lockedBalance: 0}].concat(newSimpleTrustlines);
+    if(this.getAvailableXahBalanceForEscrow() > 0) {
+      filteredTrustlines = [{balance: this.getAvailableXahBalanceForEscrow(), balanceShow: this.getAvailableXahBalanceForEscrow(), currency: 'XAH', currencyShow: 'XAH', isFrozen: false, issuer: 'XAH', limit: 100000000, limitShow: 100000000, lockedBalance: 0, escrowAllowed: true}].concat(newSimpleTrustlines);
     }
 
     this.simpleTrustlines = filteredTrustlines;
@@ -1206,8 +1206,8 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
     }
 
     //add XRP in case it is available
-    if(this.getAvailableXrpBalanceForEscrow() > 0) {
-      newSimpleTrustlines = [{balance: this.getAvailableXrpBalanceForEscrow(), balanceShow: this.getAvailableXrpBalanceForEscrow(), currency: 'XAH', currencyShow: 'XAH', isFrozen: false, issuer: 'XAH', limit: 100000000, limitShow: 100000000, lockedBalance: 0}].concat(newSimpleTrustlines);
+    if(this.getAvailableXahBalanceForEscrow() > 0) {
+      newSimpleTrustlines = [{balance: this.getAvailableXahBalanceForEscrow(), balanceShow: this.getAvailableXahBalanceForEscrow(), currency: 'XAH', currencyShow: 'XAH', isFrozen: false, issuer: 'XAH', limit: 100000000, limitShow: 100000000, lockedBalance: 0, escrowAllowed: true}].concat(newSimpleTrustlines);
     }
 
     this.simpleTrustlines = newSimpleTrustlines;    
@@ -1248,7 +1248,7 @@ export class EscrowCreateComponentXahau implements OnInit, OnDestroy {
           name = foundObject[0].name;
         }
 
-        newSimpleTrustlines.push({issuer: issuer, currency: currency, currencyShow: currencyShow, balance: balance, balanceShow: balanceShow, isFrozen: isFrozen, limit: limit, limitShow: limitShow, lockedBalance: lockedBalance, name: name});
+        newSimpleTrustlines.push({issuer: issuer, currency: currency, currencyShow: currencyShow, balance: balance, balanceShow: balanceShow, isFrozen: isFrozen, limit: limit, limitShow: limitShow, lockedBalance: lockedBalance, escrowAllowed: true, name: name});
       }
     }
 

@@ -83,7 +83,7 @@
               </mat-card>
 
               <mat-card *ngIf="originalAccountInfo.Account && !ownerHasBalanceForOwnerReserve" class="mat-card-red">
-                <label>Your account does not have enough XAH to cover the reserve requirements to create an Escrow. At least 0.2 XAH are required.</label>
+                <label>Your account does not have enough XAH to cover the reserve requirements to create an Escrow. At least {{ownerReserve/1000000}} XAH are required.</label>
               </mat-card>
 
             </div>
@@ -331,7 +331,7 @@
         <mat-card fxLayout="column" fxLayoutGap="0.5em">
             <ng-template matStepLabel>Escrow Auto Release</ng-template>
             <div *ngIf="!isAbleToAutoRelease() && !autoReleaseActivated" fxLayout="column" fxLayoutGap="0.5em">
-              <label class="description">You Escrow can not be added to the Escrow Releaser service since it does not fulfill the requirements.</label>
+              <label class="description">Your Escrow can not be added to the Escrow Releaser service since it does not fulfill the requirements.</label>
               <label>Requirements are:</label>
               <label> - FinishAfter time set</label>
               <label> - no CancelAfter or CancelAfter > 90min past FinishAfter</label>

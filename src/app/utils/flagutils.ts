@@ -7,6 +7,7 @@ export const ROOT_FLAG_NO_FREEZE:number = 2097152;
 export const ROOT_FLAG_PASSWORD_SPENT:number = 65536;
 export const ROOT_FLAG_REQUIRE_AUTH:number = 262144;
 export const ROOT_FLAG_REQUIREDESTINATION_TAG:number = 131072;
+export const ROOT_FLAG_ALLOW_TOKEN_ESCROW:number = 1073741824;
 
 export function isRequireDestinationTagEnabled(flags:number) {
     return flags && (flags & ROOT_FLAG_REQUIREDESTINATION_TAG) == ROOT_FLAG_REQUIREDESTINATION_TAG;
@@ -26,4 +27,8 @@ export function isDisallowXRPEnabled(flags:number) {
 
 export function isGlobalFreezeSet(flags:number) {
     return flags && (flags & ROOT_FLAG_GLOBAL_FREEZE) == ROOT_FLAG_GLOBAL_FREEZE;
+}
+
+export function isAllowTokenEscrowSet(flags:number) {
+    return flags && (flags & ROOT_FLAG_ALLOW_TOKEN_ESCROW) == ROOT_FLAG_ALLOW_TOKEN_ESCROW;
 }

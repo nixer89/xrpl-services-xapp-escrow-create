@@ -25,13 +25,22 @@
     <mat-progress-spinner color="primary" mode="indeterminate" diameter=25></mat-progress-spinner>
   </mat-card>
 
-  <div *ngIf="!initializing">
+  <div *ngIf="!initializing && xummOutdated">
+    <mat-card fxFlex fxLayout="column" fxLayoutAlign="start center" class="mat-card-orange margin-5">
+      <label style="text-align: center;">Your current Xaman App version is: {{xummMajorVersion}}.{{xummMinorVersion}}.</label>
+      <label>&nbsp;</label>
+      <label style="text-align: center;">You are currently connected to the XRP Ledger.</label>
+      <label style="text-align: center;">Please update your Xaman App to version 2.6 or higher to be able to use this xApp on the XRP Ledger.</label>
+    </mat-card>
+  </div>  
+
+  <div *ngIf="!initializing && !xummOutdated">
     <mat-vertical-stepper linear #escrowStepper class="theme-background">
       <mat-step completed="false" editable="false" fxLayout="column" fxLayoutGap="0.5em">
         <mat-card fxLayout="column" fxLayoutGap="1em">
             <ng-template matStepLabel>Description</ng-template>
             <a href="https://xrpl.org/escrowcreate.html" rel="noreferrer">Escrow Create Documentation</a><br/>
-            <label>Sequester XRP until the escrow process either finishes or is canceled.</label>
+            <label>Sequester XRP or any other token until the escrow process either finishes or is canceled.</label>
             <label>Every Escrow will add {{ownerReserve/1000000}} XRP to your account reserve. The {{ownerReserve/1000000}} XRP are back available when the Escrow is finished/canceled.</label>
             <mat-card class="mat-card-red" style="padding-top: 1em;">
               Be careful! You could lock away your funds for years!
@@ -72,19 +81,76 @@
                 <label>Account not activated on {{testMode ? 'Testnet' : 'Mainnet'}}.</label>
               </mat-card>
 
-              <mat-card *ngIf="originalAccountInfo && originalAccountInfo.Balance && getAvailableBalanceForEscrow() <= 0 && !loadingData" class="mat-card-red">
-                <label>This account does not have enough balance to create an Escrow.</label>
+              <mat-card *ngIf="originalAccountInfo.Account && !ownerHasBalanceForOwnerReserve" class="mat-card-red">
+                <label>Your account does not have enough XRP to cover the reserve requirements to create an Escrow. At least {{ownerReserve/1000000}} XRP are required.</label>
               </mat-card>
             </div>
 
             <div *ngIf="!originalAccountInfo || loadingData" fxLayoutAlign="start center">
-              <label>Loading...</label>
+              <label>Loading account data...</label>
               <mat-progress-spinner color="primary" mode="indeterminate" diameter=25></mat-progress-spinner>
             </div>
 
             <div style="padding-top: 0.5em;" fxLayoutGap="0.5em">
-                <button mat-raised-button color="primary" (click)="moveNext()" [disabled]="!originalAccountInfo || !originalAccountInfo.Account || loadingData || getAvailableBalanceForEscrow() <= 0">Next</button>
+                <button mat-raised-button color="primary" (click)="moveNext()" [disabled]="!originalAccountInfo || !originalAccountInfo.Account || !ownerHasBalanceForOwnerReserve || loadingData">Next</button>
                 <button mat-raised-button class="xumm-grey-background" (click)="moveBack()" [disabled]="!originalAccountInfo || loadingData">Back</button>
+            </div>
+        </mat-card>
+      </mat-step>
+
+      <mat-step completed="false" editable="false">
+        <ng-template matStepLabel>Select Token</ng-template>
+        <mat-card class="stepcontainer" fxLayout="column" fxLayoutGap="1em" style="margin-left: 0.5em; margin-right: 0.5em;">
+          <h3>Select a Token to create an Escrow for:</h3>
+            <div *ngIf="simpleTrustlines" fxLayout="column" fxLayoutGap="0.3em">
+
+              <mat-card *ngIf="simpleTrustlines.length > 6" fxLayout="row" style="padding-top: 1em;" fxLayoutAlign="start center" fxLayoutGap="1em">
+                <label><b>Filter:</b></label>
+                <mat-form-field>
+                  <mat-label class="loading">
+                    <i class="material-icons">
+                      search
+                    </i>
+                  </mat-label>
+                  <input matInput [disabled]="loading" [(ngModel)]="searchString" (keyup)="applyFilter()" placeholder="Search for Token ...">
+                </mat-form-field>
+              </mat-card>
+              
+              <div>
+                <div class="listarea" *ngIf="simpleTrustlines.length > 0">
+                  <ul class="list" fxLayout="column" fxLayoutGap="1em">
+                    <li *ngFor="let trustline of simpleTrustlines" fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="0.5em">
+                      <div style="font-size: medium; width: 100%;" fxLayout="column" fxLayoutAlign="start start">
+                        <div fxLayout="row" fxLayoutAlign="start center" style="width: 100%;">
+                          <div fxLayout="column">
+                            <label><b><code>{{trustline.currencyShow}}:</code></b></label>
+                            <label *ngIf="trustline.issuer != 'XRP'" class="xumm-grey" style="font-size: 0.6em;">( {{(trustline.name ? trustline.name : trustline.issuer)}} )</label>
+                          </div>
+                          <span style="flex: 1 1 auto;"></span>
+                          <div *ngIf="trustline.isFrozen" fxLayout="row" fxLayoutAlign="start center">
+                            <i class="material-icons xumm-red" style="font-size: 1em;">
+                              severe_cold
+                            </i>
+                            <label><b><code>(FROZEN!)</code></b></label>
+                          </div>
+                          
+                        </div>
+                        
+                        <label><b><code>{{trustline.balanceShow}}</code></b></label>
+                      </div>
+                      <span style="flex: 1 1 auto;"></span>
+                      <div fxLayout="row" fxLayoutAlign="center center">
+                        <button mat-raised-button class="thin" color="primary" (click)="selectToken(trustline)" [disabled]="applyFilters || loadingData || trustline.isFrozen || trustline.balanceShow == 0">Select</button>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+                <div *ngIf="simpleTrustlines.length <= 0">
+                  <mat-card class="mat-card-orange floatcenter">
+                    <label>No Tokens found</label>
+                  </mat-card>
+                </div>
+              </div>
             </div>
         </mat-card>
       </mat-step>
@@ -124,6 +190,10 @@
                 <label>You didn't Sign In with this account. Make sure it is the correct address and it is NOT an exchange or other custodial wallet!</label>
               </mat-card>
 
+              <mat-card *ngIf="destinationAccountExists && !destinationHasTrustline" class="mat-card-red">
+                <label>The destination account does NOT have a trustline for the token: {{selectedToken && selectedToken.currencyShow}}!</label>
+              </mat-card>
+
             </div>
 
             <div *ngIf="loadingData" fxLayoutAlign="center center">
@@ -132,7 +202,7 @@
             </div>
 
             <div style="padding-top: 0.5em;" fxLayoutGap="0.5em">
-                <button mat-raised-button color="primary" (click)="moveNext()" [disabled]="!validAddress || loadingData || escrowDestinationHasDestTagEnabled || !destinationAccountExists">Next</button>
+                <button mat-raised-button color="primary" (click)="moveNext()" [disabled]="!validAddress || loadingData || escrowDestinationHasDestTagEnabled || !destinationAccountExists || !destinationHasTrustline">Next</button>
                 <button mat-raised-button class="xumm-grey-background" (click)="moveBack()" [disabled]="loadingData">Back</button>
             </div>
         </mat-card>
@@ -141,19 +211,20 @@
       <mat-step completed="false" editable="false">
         <mat-card fxLayout="column" fxLayoutGap="0.5em">
             <ng-template matStepLabel>Escrow Amount</ng-template>
-            <label class="description">Please define the amount of XRP you want to lock in your Escrow.</label>
+            <label class="description">Please define the amount of {{selectedToken && selectedToken.currencyShow}} you want to lock in your Escrow.</label>
             <form fxLayout="column" fxLayoutGap="0.5em" style="padding-top: 1em;">
               <mat-form-field>
-                <input #inpamount matInput type="text" name="amount" placeholder="Escrow Amount in XRP" [(ngModel)]="amountInput" (ngModelChange)="checkChanges()">
+                <input #inpamount matInput type="text" name="amount" placeholder="Escrow Amount in {{selectedToken && selectedToken.currencyShow}}" [(ngModel)]="amountInput" (ngModelChange)="checkChanges()">
+                <mat-hint *ngIf="amountInput && !validAmount && !maxSixDigits && !escrowBiggerThanAvailable">Not a valid number. Please choose a number with a maximum of 15 decimal places!</mat-hint>
                 <mat-hint *ngIf="amountInput && !validAmount && maxSixDigits">The XRP amount cannot have more than 6 decimals.</mat-hint>
                 <mat-hint *ngIf="amountInput && !validAmount && !maxSixDigits && amountInput.toString().includes(',')">Not a valid amount. Please use '.' as decimal operator.</mat-hint>
-                <mat-hint *ngIf="amountInput && !validAmount && !maxSixDigits && !amountInput.toString().includes(',') && !escrowBiggerThanAvailable()">Not a valid amount</mat-hint>
               </mat-form-field>
-              <label *ngIf="originalAccountInfo && originalAccountInfo.Balance">Maximum: {{getAvailableBalanceForEscrow()}} XRP</label>
+              <label *ngIf="selectedToken && selectedToken.balanceShow">Maximum: {{selectedToken && selectedToken.balanceShow}} {{selectedToken && selectedToken.currencyShow}}</label>
             </form>
 
             <mat-card *ngIf="amountInput && !validAmount && escrowBiggerThanAvailable()" class="mat-card-red">
-              <label>Your escrow amount is too big. Max amount is: {{getAvailableBalanceForEscrow()}} XRP. ('Available Balance' minus {{ownerReserve/1000000}} XRP for account reserve) <a href="https://xrpl.org/reserves.html#owner-reserves" target="_blank"> (Reserve Info)</a></label>
+              <label>Your escrow amount is too big. Max amount is: {{selectedToken && selectedToken.balanceShow}} {{selectedToken && selectedToken.currencyShow}}.</label>
+              <label *ngIf="selectedToken && selectedToken.currency === 'XRP'">('Available Balance' minus {{ownerReserve/1000000}} XRP for account reserve) <a href="https://xrpl.org/reserves.html#owner-reserves" target="_blank"> (Reserve Info)</a></label>
             </mat-card>
 
             <div *ngIf="loadingData" fxLayoutAlign="center center">
@@ -258,7 +329,7 @@
         <mat-card fxLayout="column" fxLayoutGap="0.5em">
             <ng-template matStepLabel>Escrow Auto Release</ng-template>
             <div *ngIf="!isAbleToAutoRelease() && !autoReleaseActivated" fxLayout="column" fxLayoutGap="0.5em">
-              <label class="description">You Escrow can not be added to the Escrow Releaser service since it does not fulfill the requirements.</label>
+              <label class="description">Your Escrow can not be added to the Escrow Releaser service since it does not fulfill the requirements.</label>
               <label>Requirements are:</label>
               <label> - FinishAfter time set</label>
               <label> - no CancelAfter or CancelAfter > 90min past FinishAfter</label>
